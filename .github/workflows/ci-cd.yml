@@ -7,6 +7,9 @@ on:
     branches: [main]
 
 jobs:
+  # ============================================================
+  # BACKEND TESTING AND LINTING
+  # ============================================================
   test-and-lint:
     name: Backend Unit & Integration Tests
     runs-on: ubuntu-latest
@@ -37,15 +40,24 @@ jobs:
           --health-retries 5
 
     steps:
+      # --------------------------------------------------------
+      # Checkout
+      # --------------------------------------------------------
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # --------------------------------------------------------
+      # Python
+      # --------------------------------------------------------
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: "pip"
 
+      # --------------------------------------------------------
+      # Install Python dependencies
+      # --------------------------------------------------------
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
@@ -53,10 +65,43 @@ jobs:
           python -m pip install email-validator
           python -m pip install ruff mypy
 
+      # --------------------------------------------------------
+      # Verify email-validator installation
+      # --------------------------------------------------------
+      - name: Verify Email Validator
+        run: |
+          python -m pip show email-validator
+          python -c "import email_validator; print('email-validator installed successfully')"
+
+      # --------------------------------------------------------
+      # Verify important backend imports
+      # --------------------------------------------------------
+      - name: Verify Backend Import
+        env:
+          ENVIRONMENT: test
+          SECRET_KEY: test-secret-key-12345
+          DATABASE_URL: sqlite:///./test_ci.db
+        run: |
+          cd backend
+          python -c "from app.main import app; print('Backend app import successful')"
+
+      # --------------------------------------------------------
+      # Ruff linting
+      # --------------------------------------------------------
       - name: Run Code Linter (Ruff)
         run: |
           ruff check backend/app
 
+      # --------------------------------------------------------
+      # Ruff formatting check
+      # --------------------------------------------------------
+      - name: Check Code Formatting
+        run: |
+          ruff format --check backend/app
+
+      # --------------------------------------------------------
+      # Pytest
+      # --------------------------------------------------------
       - name: Run Test Suite with Pytest
         env:
           ENVIRONMENT: test
@@ -66,6 +111,20 @@ jobs:
           cd backend
           python -m pytest tests/ -v --junitxml=test-results.xml
 
+      # --------------------------------------------------------
+      # Upload pytest results
+      # --------------------------------------------------------
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: backend/test-results.xml
+          if-no-files-found: ignore
+
+  # ============================================================
+  # DOCKER BUILD AND PUBLISH
+  # ============================================================
   build-and-push:
     name: Build & Publish OCI Container
     needs: test-and-lint
@@ -77,12 +136,21 @@ jobs:
       packages: write
 
     steps:
+      # --------------------------------------------------------
+      # Checkout
+      # --------------------------------------------------------
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # --------------------------------------------------------
+      # Docker Buildx
+      # --------------------------------------------------------
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # --------------------------------------------------------
+      # GitHub Container Registry login
+      # --------------------------------------------------------
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -90,7 +158,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push Docker image
+      # --------------------------------------------------------
+      # Build and push image
+      # --------------------------------------------------------
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -102,6 +173,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # ============================================================
+  # KUBERNETES DEPLOYMENT
+  # ============================================================
   deploy-to-k8s:
     name: Canary Deploy to Kubernetes
     needs: build-and-push
@@ -109,18 +183,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # --------------------------------------------------------
+      # Checkout Kubernetes manifests
+      # --------------------------------------------------------
       - name: Checkout Manifests
         uses: actions/checkout@v4
 
+      # --------------------------------------------------------
+      # Setup kubectl
+      # --------------------------------------------------------
       - name: Configure Kubectl
         uses: azure/setup-kubectl@v3
 
+      # --------------------------------------------------------
+      # Current staging deployment simulation
+      # --------------------------------------------------------
       - name: Deploy to Tactical Staging Cluster
         run: |
           echo "Simulating rollout to Kubernetes cluster..."
+          echo "Docker image: ghcr.io/${{ github.repository }}/backend:${{ github.sha }}"
+          echo "Kubernetes deployment simulation completed."
+
+          # Actual deployment can be enabled when a Kubernetes
+          # cluster and credentials are configured:
+          #
           # kubectl apply -f docs/k8s/k8s-deployment.yaml
           # kubectl rollout status deployment/backend-api -n ner-logisense
 
+  # ============================================================
+  # FRONTEND DEPLOYMENT TO GITHUB PAGES
+  # ============================================================
   deploy-frontend:
     name: Deploy Frontend to GitHub Pages
     if: github.ref == 'refs/heads/main'
@@ -136,17 +228,29 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      # --------------------------------------------------------
+      # Checkout repository
+      # --------------------------------------------------------
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # --------------------------------------------------------
+      # Configure GitHub Pages
+      # --------------------------------------------------------
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      # --------------------------------------------------------
+      # Upload frontend
+      # --------------------------------------------------------
       - name: Upload Frontend
         uses: actions/upload-pages-artifact@v3
         with:
           path: "./frontend"
 
+      # --------------------------------------------------------
+      # Deploy
+      # --------------------------------------------------------
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
