@@ -2,14 +2,15 @@ name: NER-LogiSense CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test-and-lint:
     name: Backend Unit & Integration Tests
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgis/postgis:16-3.4
@@ -42,14 +43,15 @@ jobs:
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
-          pip install ruff mypy
+          python -m pip install -r backend/requirements.txt
+          python -m pip install email-validator
+          python -m pip install ruff mypy
 
       - name: Run Code Linter (Ruff)
         run: |
@@ -69,6 +71,7 @@ jobs:
     needs: test-and-lint
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
@@ -104,6 +107,7 @@ jobs:
     needs: build-and-push
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Manifests
         uses: actions/checkout@v4
@@ -116,6 +120,7 @@ jobs:
           echo "Simulating rollout to Kubernetes cluster..."
           # kubectl apply -f docs/k8s/k8s-deployment.yaml
           # kubectl rollout status deployment/backend-api -n ner-logisense
+
   deploy-frontend:
     name: Deploy Frontend to GitHub Pages
     if: github.ref == 'refs/heads/main'
@@ -140,7 +145,7 @@ jobs:
       - name: Upload Frontend
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './frontend'
+          path: "./frontend"
 
       - name: Deploy to GitHub Pages
         id: deployment
