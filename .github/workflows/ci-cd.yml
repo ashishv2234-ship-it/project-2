@@ -116,3 +116,32 @@ jobs:
           echo "Simulating rollout to Kubernetes cluster..."
           # kubectl apply -f docs/k8s/k8s-deployment.yaml
           # kubectl rollout status deployment/backend-api -n ner-logisense
+  deploy-frontend:
+    name: Deploy Frontend to GitHub Pages
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Frontend
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './frontend'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
