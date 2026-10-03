@@ -2,244 +2,331 @@ name: NER-LogiSense CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
+
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
+
   # ============================================================
-  # BACKEND TESTING AND LINTING
+  # JOB 1: BACKEND TESTING + LINTING
   # ============================================================
   test-and-lint:
     name: Backend Unit & Integration Tests
     runs-on: ubuntu-latest
 
     services:
+
+      # ----------------------------------------------------------
+      # PostgreSQL + PostGIS
+      # ----------------------------------------------------------
       postgres:
         image: postgis/postgis:16-3.4
+
         env:
           POSTGRES_USER: ner_user
           POSTGRES_PASSWORD: ner_secure_password_2026
           POSTGRES_DB: ner_logisense_db
+
         ports:
           - 5432:5432
+
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
+      # ----------------------------------------------------------
+      # Redis
+      # ----------------------------------------------------------
       redis:
         image: redis:7.2-alpine
+
         ports:
           - 6379:6379
+
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
+
     steps:
-      # --------------------------------------------------------
-      # Checkout
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # CHECKOUT
+      # ==========================================================
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
-      # Python
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # PYTHON
+      # ==========================================================
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: "pip"
 
-      # --------------------------------------------------------
-      # Install Python dependencies
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # INSTALL DEPENDENCIES
+      # ==========================================================
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
+
           python -m pip install -r backend/requirements.txt
+
           python -m pip install email-validator
+
           python -m pip install ruff mypy
 
-      # --------------------------------------------------------
-      # Verify email-validator installation
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # VERIFY EMAIL VALIDATOR
+      # ==========================================================
       - name: Verify Email Validator
         run: |
           python -m pip show email-validator
+
           python -c "import email_validator; print('email-validator installed successfully')"
 
-      # --------------------------------------------------------
-      # Verify backend import
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # VERIFY BACKEND IMPORT
+      # ==========================================================
       - name: Verify Backend Import
         env:
           ENVIRONMENT: test
           SECRET_KEY: test-secret-key-12345
           DATABASE_URL: sqlite:///./test_ci.db
+
         run: |
           cd backend
+
           python -c "from app.main import app; print('Backend app import successful')"
 
-      # --------------------------------------------------------
-      # Initialize test database
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # INITIALIZE TEST DATABASE
+      #
+      # IMPORTANT:
+      # The CI runner starts with a completely fresh SQLite DB.
+      # Therefore the application tables must be created before
+      # pytest is executed.
+      # ==========================================================
       - name: Initialize Test Database
         env:
           ENVIRONMENT: test
           SECRET_KEY: test-secret-key-12345
           DATABASE_URL: sqlite:///./test_ci.db
+
         run: |
           cd backend
+
           python -c "from app.seed.seed_data import seed_database; seed_database(); print('Test database initialized successfully')"
 
-      # --------------------------------------------------------
-      # Verify database tables
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # VERIFY TEST DATABASE
+      # ==========================================================
       - name: Verify Test Database
         env:
           ENVIRONMENT: test
           SECRET_KEY: test-secret-key-12345
           DATABASE_URL: sqlite:///./test_ci.db
+
         run: |
           cd backend
+
           python -c "from app.core.database import engine; from sqlalchemy import inspect; tables = inspect(engine).get_table_names(); print('Database tables:', tables); required = ['users', 'roads', 'road_segments', 'route_requests', 'field_reports']; missing = [table for table in required if table not in tables]; assert not missing, f'Missing tables: {missing}'; print('All required test tables exist')"
 
-      # --------------------------------------------------------
-      # Ruff linting
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # RUFF LINT
+      # ==========================================================
       - name: Run Code Linter (Ruff)
         run: |
           ruff check backend/app
 
-      # --------------------------------------------------------
-      # Ruff formatting check
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # RUFF FORMAT
+      # ==========================================================
       - name: Check Code Formatting
         run: |
           ruff format --check backend/app
 
-      # --------------------------------------------------------
-      # Pytest
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # PYTEST
+      # ==========================================================
       - name: Run Test Suite with Pytest
         env:
           ENVIRONMENT: test
           SECRET_KEY: test-secret-key-12345
           DATABASE_URL: sqlite:///./test_ci.db
+
         run: |
           cd backend
+
           python -m pytest tests/ -v --junitxml=test-results.xml
 
-      # --------------------------------------------------------
-      # Upload pytest results
-      # --------------------------------------------------------
+
+      # ==========================================================
+      # UPLOAD TEST RESULTS
+      # ==========================================================
       - name: Upload Test Results
         if: always()
+
         uses: actions/upload-artifact@v4
+
         with:
           name: pytest-results
           path: backend/test-results.xml
           if-no-files-found: ignore
 
+
   # ============================================================
-  # DOCKER BUILD AND PUBLISH
+  # JOB 2: BUILD AND PUSH DOCKER IMAGE
   # ============================================================
   build-and-push:
     name: Build & Publish OCI Container
-    needs: test-and-lint
+
+    needs:
+      - test-and-lint
+
     if: github.ref == 'refs/heads/main'
+
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
       packages: write
 
+
     steps:
-      # --------------------------------------------------------
-      # Checkout
-      # --------------------------------------------------------
-      - name: Checkout Code
+
+      # ----------------------------------------------------------
+      # CHECKOUT
+      # ----------------------------------------------------------
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
-      # Docker Buildx
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # DOCKER BUILDX
+      # ----------------------------------------------------------
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # --------------------------------------------------------
-      # GitHub Container Registry login
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # LOGIN TO GHCR
+      # ----------------------------------------------------------
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
+
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # --------------------------------------------------------
-      # Build and push Docker image
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # BUILD + PUSH IMAGE
+      # ----------------------------------------------------------
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
+
         with:
           context: .
           file: ./Dockerfile
+
           push: true
+
           tags: |
             ghcr.io/${{ github.repository }}/backend:latest
             ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+
   # ============================================================
-  # KUBERNETES DEPLOYMENT
+  # JOB 3: KUBERNETES DEPLOYMENT
   # ============================================================
   deploy-to-k8s:
     name: Canary Deploy to Kubernetes
-    needs: build-and-push
+
+    needs:
+      - build-and-push
+
     if: github.ref == 'refs/heads/main'
+
     runs-on: ubuntu-latest
 
+
     steps:
-      # --------------------------------------------------------
-      # Checkout Kubernetes manifests
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # CHECKOUT
+      # ----------------------------------------------------------
       - name: Checkout Manifests
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
-      # Setup kubectl
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # KUBECTL
+      # ----------------------------------------------------------
       - name: Configure Kubectl
         uses: azure/setup-kubectl@v3
 
-      # --------------------------------------------------------
-      # Current staging deployment simulation
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # DEPLOYMENT SIMULATION
+      # ----------------------------------------------------------
       - name: Deploy to Tactical Staging Cluster
         run: |
+          echo "=========================================="
+          echo "NER-LogiSense Kubernetes Deployment"
+          echo "=========================================="
+
           echo "Simulating rollout to Kubernetes cluster..."
-          echo "Docker image: ghcr.io/${{ github.repository }}/backend:${{ github.sha }}"
+
+          echo "Docker image:"
+          echo "ghcr.io/${{ github.repository }}/backend:${{ github.sha }}"
+
           echo "Kubernetes deployment simulation completed."
 
-          # Actual deployment can be enabled when a Kubernetes
-          # cluster and credentials are configured:
-          #
+          # ------------------------------------------------------
+          # REAL KUBERNETES COMMANDS
+          # Enable these when a real cluster is configured.
+          # ------------------------------------------------------
+
           # kubectl apply -f docs/k8s/k8s-deployment.yaml
-          # kubectl rollout status deployment/backend-api -n ner-logisense
+
+          # kubectl rollout status \
+          #   deployment/backend-api \
+          #   -n ner-logisense
+
 
   # ============================================================
-  # FRONTEND DEPLOYMENT TO GITHUB PAGES
+  # JOB 4: FRONTEND DEPLOYMENT
   # ============================================================
   deploy-frontend:
     name: Deploy Frontend to GitHub Pages
+
     if: github.ref == 'refs/heads/main'
+
     runs-on: ubuntu-latest
 
     permissions:
@@ -251,30 +338,37 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
+
     steps:
-      # --------------------------------------------------------
-      # Checkout repository
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # CHECKOUT
+      # ----------------------------------------------------------
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
-      # Configure GitHub Pages
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # CONFIGURE GITHUB PAGES
+      # ----------------------------------------------------------
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # --------------------------------------------------------
-      # Upload frontend
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # UPLOAD FRONTEND
+      # ----------------------------------------------------------
       - name: Upload Frontend
         uses: actions/upload-pages-artifact@v3
+
         with:
           path: "./frontend"
 
-      # --------------------------------------------------------
-      # Deploy
-      # --------------------------------------------------------
+
+      # ----------------------------------------------------------
+      # DEPLOY FRONTEND
+      # ----------------------------------------------------------
       - name: Deploy to GitHub Pages
         id: deployment
+
         uses: actions/deploy-pages@v4
