@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # 1. Main FastAPI Application & WebSocket Server
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ner-logisense-api
+    restart: always
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=False
+      - SECRET_KEY=ner-logisense-secure-super-key-2026-tactical-defense-command
+      - DATABASE_URL=postgresql://ner_user:ner_secure_password_2026@postgres:5432/ner_logisense_db
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT=http://minio:9000
+      - S3_BUCKET=ner-logisense-media
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ner-net
+
+  # 2. PostgreSQL 16 with PostGIS Spatial Extensions
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: ner-logisense-db
+    restart: always
+    environment:
+      - POSTGRES_USER=ner_user
+      - POSTGRES_PASSWORD=ner_secure_password_2026
+      - POSTGRES_DB=ner_logisense_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docs/postgis_schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ner_user -d ner_logisense_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ner-net
+
+  # 3. Redis 7.2 Cache & Spatial Index
+  redis:
+    image: redis:7.2-alpine
+    container_name: ner-logisense-cache
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ner-net
+
+  # 4. Redpanda (Kafka-compatible high-throughput streaming for GPS points)
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.3.4
+    container_name: ner-logisense-stream
+    restart: always
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 512M
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --check=false
+    ports:
+      - "9092:9092"
+      - "9644:9644"
+    volumes:
+      - redpandadata:/var/lib/redpanda/data
+    networks:
+      - ner-net
+
+  # 5. MinIO Object Storage for Field Damage Media
+  minio:
+    image: minio/minio:RELEASE.2024-03-30T09-41-56Z
+    container_name: ner-logisense-s3
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    networks:
+      - ner-net
+
+  # 6. Prometheus Observability
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: ner-logisense-prom
+    restart: always
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./docs/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - ner-net
+
+  # 7. Grafana Tactical Operations Dashboard
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: ner-logisense-grafana
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafanadata:/var/lib/grafana
+    networks:
+      - ner-net
+
+volumes:
+  pgdata:
+  redisdata:
+  redpandadata:
+  miniodata:
+  grafanadata:
+
+networks:
+  ner-net:
+    driver: bridge

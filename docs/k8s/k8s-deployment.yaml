@@ -1,0 +1,222 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ner-logisense
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ner-logisense-config
+  namespace: ner-logisense
+data:
+  ENVIRONMENT: "production"
+  DEBUG: "false"
+  API_V1_STR: "/api/v1"
+  DEFAULT_ROUTING_ALPHA: "0.45"
+  DEFAULT_ROUTING_BETA: "0.40"
+  DEFAULT_ROUTING_GAMMA: "0.15"
+  DATABASE_URL: "postgresql://ner_user:ner_secure_password_2026@postgres-service:5432/ner_logisense_db"
+  REDIS_URL: "redis://redis-service:6379/0"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ner-logisense-secrets
+  namespace: ner-logisense
+type: Opaque
+stringData:
+  SECRET_KEY: "ner-logisense-secure-super-key-2026-tactical-defense-command"
+  IMD_WEATHER_API_KEY: "prod_imd_weather_secure_token"
+  BHUVAN_GIS_API_KEY: "prod_bhuvan_geoportal_token"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-postgis
+  namespace: ner-logisense
+spec:
+  serviceName: "postgres-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-postgis
+  template:
+    metadata:
+      labels:
+        app: postgres-postgis
+    spec:
+      containers:
+      - name: postgres
+        image: postgis/postgis:16-3.4
+        env:
+        - name: POSTGRES_USER
+          value: "ner_user"
+        - name: POSTGRES_PASSWORD
+          value: "ner_secure_password_2026"
+        - name: POSTGRES_DB
+          value: "ner_logisense_db"
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: pg-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: pg-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 100Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: ner-logisense
+spec:
+  ports:
+  - port: 5432
+  selector:
+    app: postgres-postgis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+  namespace: ner-logisense
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7.2-alpine
+        ports:
+        - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: ner-logisense
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api
+  namespace: ner-logisense
+  labels:
+    app: backend-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend-api
+  template:
+    metadata:
+      labels:
+        app: backend-api
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/ner-logisense/backend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: ner-logisense-config
+        - secretRef:
+            name: ner-logisense-secrets
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: ner-logisense
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: backend-api
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: ner-logisense
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-api
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ner-logisense-ingress
+  namespace: ner-logisense
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "backend-service"
+spec:
+  tls:
+  - hosts:
+    - api.ner-logisense.gov.in
+    secretName: ner-logisense-tls
+  rules:
+  - host: api.ner-logisense.gov.in
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 80

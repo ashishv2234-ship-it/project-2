@@ -1,0 +1,7090 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NER-LogiSense Intelligence Platform",
+    "description": "\n# NER-LogiSense Backend API\n### AI-powered Smart Logistics and Accessibility Intelligence Platform for India's North Eastern Region (NER)\n\n**Core Capabilities**:\n- Real-time road, bridge, and transport accessibility monitoring\n- Landslide and flood disruption prediction using environmental feature models\n- AI-based multi-criteria route optimization ($Cost = \\alpha \\cdot T + \\beta \\cdot R + \\gamma \\cdot C$)\n- High-throughput GPS tracking of vehicles carrying medical oxygen, cryo-vaccines, foodgrains, and relief supplies\n- Offline-first field hazard reporting with idempotency and conflict resolution\n- Multilingual automated alerts across 9 regional languages\n- WebSocket telemetry streaming\n    ",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login",
+        "description": "OAuth 2.0 / JWT Login endpoint.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Refresh Token",
+        "description": "Exchange valid refresh token for a new access token.",
+        "operationId": "refresh_token_api_v1_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Logout",
+        "description": "Stateless JWT logout confirmation.",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Logout Api V1 Auth Logout Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/otp/request": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Request Otp",
+        "description": "Request tactical OTP for low-connectivity field officers & drivers.",
+        "operationId": "request_otp_api_v1_auth_otp_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Request Otp Api V1 Auth Otp Request Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/otp/verify": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Verify Otp",
+        "description": "Verify field OTP and obtain tactical session token.",
+        "operationId": "verify_otp_api_v1_auth_otp_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OTPVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Verify Otp Api V1 Auth Otp Verify Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": [
+          "Users & Access"
+        ],
+        "summary": "Get Current User Profile",
+        "description": "Retrieve logged-in user profile.",
+        "operationId": "get_current_user_profile_api_v1_users_me_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me/preferences": {
+      "patch": {
+        "tags": [
+          "Users & Access"
+        ],
+        "summary": "Update Preferences",
+        "description": "Update language, district focus, or notification preferences.",
+        "operationId": "update_preferences_api_v1_users_me_preferences_patch",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencesUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": [
+          "Users & Access"
+        ],
+        "summary": "List Users",
+        "description": "List platform operators with optional role filter.",
+        "operationId": "list_users_api_v1_users_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  },
+                  "title": "Response List Users Api V1 Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Users & Access"
+        ],
+        "summary": "Create User",
+        "description": "Register new command operator or field officer.",
+        "operationId": "create_user_api_v1_users_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "patch": {
+        "tags": [
+          "Users & Access"
+        ],
+        "summary": "Update User",
+        "description": "Update user attributes or status.",
+        "operationId": "update_user_api_v1_users__id__patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users & Access"
+        ],
+        "summary": "Delete User",
+        "description": "Deactivate or remove user.",
+        "operationId": "delete_user_api_v1_users__id__delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Delete User Api V1 Users  Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network/roads": {
+      "get": {
+        "tags": [
+          "Transport Network & Accessibility"
+        ],
+        "summary": "Get All Roads",
+        "description": "Retrieve all monitored National, State, and BRO border highways.",
+        "operationId": "get_all_roads_api_v1_network_roads_get",
+        "parameters": [
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          },
+          {
+            "name": "type_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type Filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoadResponse"
+                  },
+                  "title": "Response Get All Roads Api V1 Network Roads Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network/roads/{id}": {
+      "get": {
+        "tags": [
+          "Transport Network & Accessibility"
+        ],
+        "summary": "Get Road By Id",
+        "description": "Retrieve detailed highway metadata.",
+        "operationId": "get_road_by_id_api_v1_network_roads__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network/segments": {
+      "get": {
+        "tags": [
+          "Transport Network & Accessibility"
+        ],
+        "summary": "Get Road Segments",
+        "description": "Retrieve road segments with terrain, slope, and elevation attributes.",
+        "operationId": "get_road_segments_api_v1_network_segments_get",
+        "parameters": [
+          {
+            "name": "road_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Road Id"
+            }
+          },
+          {
+            "name": "district_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "District Id"
+            }
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoadSegmentResponse"
+                  },
+                  "title": "Response Get Road Segments Api V1 Network Segments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network/segments/{id}/status": {
+      "get": {
+        "tags": [
+          "Transport Network & Accessibility"
+        ],
+        "summary": "Get Segment Status",
+        "description": "Get live status, recent events, and expected delay for a specific segment.",
+        "operationId": "get_segment_status_api_v1_network_segments__id__status_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Segment Status Api V1 Network Segments  Id  Status Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network/bridges": {
+      "get": {
+        "tags": [
+          "Transport Network & Accessibility"
+        ],
+        "summary": "Get All Bridges",
+        "description": "List major bridges, aqueducts, and load limits.",
+        "operationId": "get_all_bridges_api_v1_network_bridges_get",
+        "parameters": [
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BridgeResponse"
+                  },
+                  "title": "Response Get All Bridges Api V1 Network Bridges Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network/districts/{id}/connectivity": {
+      "get": {
+        "tags": [
+          "Transport Network & Accessibility"
+        ],
+        "summary": "Get District Connectivity",
+        "description": "Calculate District Isolation Index and accessible corridors.",
+        "operationId": "get_district_connectivity_api_v1_network_districts__id__connectivity_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DistrictConnectivityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network/status-events": {
+      "post": {
+        "tags": [
+          "Transport Network & Accessibility"
+        ],
+        "summary": "Post Road Status Event",
+        "description": "Submit a verified road status change (e.g. Landslide Clearance or Closure).",
+        "operationId": "post_road_status_event_api_v1_network_status_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoadStatusEventCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Post Road Status Event Api V1 Network Status Events Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network/accessibility-summary": {
+      "get": {
+        "tags": [
+          "Transport Network & Accessibility"
+        ],
+        "summary": "Get Accessibility Summary",
+        "description": "Returns top-level tactical accessibility KPIs.",
+        "operationId": "get_accessibility_summary_api_v1_network_accessibility_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessibilitySummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/weather/current": {
+      "get": {
+        "tags": [
+          "Weather Intelligence"
+        ],
+        "summary": "Get Current Weather",
+        "description": "Fetch live meteorological reading from IMD AWS Doppler stations.",
+        "operationId": "get_current_weather_api_v1_weather_current_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "description": "Latitude",
+              "default": 26.14,
+              "title": "Lat"
+            },
+            "description": "Latitude"
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "description": "Longitude",
+              "default": 91.73,
+              "title": "Lon"
+            },
+            "description": "Longitude"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherCurrentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/weather/forecast": {
+      "get": {
+        "tags": [
+          "Weather Intelligence"
+        ],
+        "summary": "Get Forecast",
+        "description": "Retrieve multi-hour weather and precipitation forecast.",
+        "operationId": "get_forecast_api_v1_weather_forecast_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 26.14,
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 91.73,
+              "title": "Lon"
+            }
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 72,
+              "minimum": 6,
+              "default": 24,
+              "title": "Hours"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WeatherForecastResponse"
+                  },
+                  "title": "Response Get Forecast Api V1 Weather Forecast Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/weather/warnings": {
+      "get": {
+        "tags": [
+          "Weather Intelligence"
+        ],
+        "summary": "Get Weather Warnings",
+        "description": "Get active IMD weather warning bulletins across NER districts.",
+        "operationId": "get_weather_warnings_api_v1_weather_warnings_get",
+        "parameters": [
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "District"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WarningResponse"
+                  },
+                  "title": "Response Get Weather Warnings Api V1 Weather Warnings Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk/segments": {
+      "get": {
+        "tags": [
+          "Disruption Risk & Predictive AI"
+        ],
+        "summary": "Get Segment Risks",
+        "description": "Retrieve AI-computed risk scores for road segments.",
+        "operationId": "get_segment_risks_api_v1_risk_segments_get",
+        "parameters": [
+          {
+            "name": "risk_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Risk Type"
+            }
+          },
+          {
+            "name": "min_probability",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.0,
+              "title": "Min Probability"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SegmentRiskResponse"
+                  },
+                  "title": "Response Get Segment Risks Api V1 Risk Segments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk/districts/{id}/summary": {
+      "get": {
+        "tags": [
+          "Disruption Risk & Predictive AI"
+        ],
+        "summary": "Get District Risk Summary",
+        "description": "District level aggregated AI risk telemetry.",
+        "operationId": "get_district_risk_summary_api_v1_risk_districts__id__summary_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DistrictRiskSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk/recompute": {
+      "post": {
+        "tags": [
+          "Disruption Risk & Predictive AI"
+        ],
+        "summary": "Recompute All Risks",
+        "description": "Trigger periodic or event-driven ML retraining and risk score recalculation.",
+        "operationId": "recompute_all_risks_api_v1_risk_recompute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskRecomputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Recompute All Risks Api V1 Risk Recompute Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/plan": {
+      "post": {
+        "tags": [
+          "Routing & AI Optimization"
+        ],
+        "summary": "Plan Tactical Route",
+        "description": "Compute multi-criteria optimal route trajectories using cost formula:\nCost = alpha * travel_time + beta * risk_score + gamma * operating_cost",
+        "operationId": "plan_tactical_route_api_v1_routes_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutePlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutePlanResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/{route_id}": {
+      "get": {
+        "tags": [
+          "Routing & AI Optimization"
+        ],
+        "summary": "Get Route Details",
+        "description": "Retrieve full waypoint coordinates and telemetry for an option.",
+        "operationId": "get_route_details_api_v1_routes__route_id__get",
+        "parameters": [
+          {
+            "name": "route_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Route Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteOptionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/assign": {
+      "post": {
+        "tags": [
+          "Routing & AI Optimization"
+        ],
+        "summary": "Assign Route To Trip",
+        "description": "Assign designated optimal route to an active trip or relief convoy.",
+        "operationId": "assign_route_to_trip_api_v1_routes_assign_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteAssignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Assign Route To Trip Api V1 Routes Assign Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/alternatives": {
+      "get": {
+        "tags": [
+          "Routing & AI Optimization"
+        ],
+        "summary": "Get Route Alternatives",
+        "description": "Get real-time fallback routes when primary corridor experiences sudden blockage.",
+        "operationId": "get_route_alternatives_api_v1_routes_alternatives_get",
+        "parameters": [
+          {
+            "name": "trip_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Trip Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Route Alternatives Api V1 Routes Alternatives Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/reoptimize": {
+      "post": {
+        "tags": [
+          "Routing & AI Optimization"
+        ],
+        "summary": "Reoptimize Active Route",
+        "description": "Dynamically reroute an active in-transit convoy around newly detected landslide.",
+        "operationId": "reoptimize_active_route_api_v1_routes_reoptimize_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteReoptimizeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Reoptimize Active Route Api V1 Routes Reoptimize Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/emergency-corridors": {
+      "get": {
+        "tags": [
+          "Routing & AI Optimization"
+        ],
+        "summary": "Get Emergency Corridors",
+        "description": "List designated Grade-1 vital defense and disaster relief corridors.",
+        "operationId": "get_emergency_corridors_api_v1_routes_emergency_corridors_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EmergencyCorridorResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Emergency Corridors Api V1 Routes Emergency Corridors Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vehicles": {
+      "post": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Register Vehicle",
+        "description": "Register a new relief or supply vehicle.",
+        "operationId": "register_vehicle_api_v1_vehicles_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VehicleCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "List Vehicles",
+        "description": "List tracked fleet vehicles and live GPS telemetry.",
+        "operationId": "list_vehicles_api_v1_vehicles_get",
+        "parameters": [
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          },
+          {
+            "name": "type_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type Filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VehicleResponse"
+                  },
+                  "title": "Response List Vehicles Api V1 Vehicles Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vehicles/{id}": {
+      "get": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Get Vehicle By Id",
+        "description": "Get single vehicle state and sensor telemetry.",
+        "operationId": "get_vehicle_by_id_api_v1_vehicles__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vehicles/{id}/gps": {
+      "post": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Ingest Vehicle Gps",
+        "description": "Ingest real-time single GPS location update.",
+        "operationId": "ingest_vehicle_gps_api_v1_vehicles__id__gps_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GPSReadingCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Ingest Vehicle Gps Api V1 Vehicles  Id  Gps Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vehicles/gps/batch": {
+      "post": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Ingest Batch Gps",
+        "description": "High-throughput batch GPS ingestion endpoint (supporting 5,000 updates/sec).",
+        "operationId": "ingest_batch_gps_api_v1_vehicles_gps_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GPSBatchIngestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Ingest Batch Gps Api V1 Vehicles Gps Batch Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vehicles/{id}/location-history": {
+      "get": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Get Vehicle Location History",
+        "description": "Get chronological location trail for a vehicle.",
+        "operationId": "get_vehicle_location_history_api_v1_vehicles__id__location_history_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Vehicle Location History Api V1 Vehicles  Id  Location History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/consignments": {
+      "post": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Create Consignment",
+        "description": "Register cargo shipment (Medical Oxygen, FCI Foodgrains, Vaccines).",
+        "operationId": "create_consignment_api_v1_consignments_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsignmentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsignmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/consignments/{id}": {
+      "get": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Get Consignment",
+        "description": "Retrieve consignment metadata and tracking status.",
+        "operationId": "get_consignment_api_v1_consignments__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsignmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trips": {
+      "post": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Create Trip",
+        "description": "Dispatch a trip / relief mission.",
+        "operationId": "create_trip_api_v1_trips_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TripCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trips/{id}/status": {
+      "get": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Get Trip Status",
+        "description": "Get live trip status, dynamic ETA prediction, and route progress.",
+        "operationId": "get_trip_status_api_v1_trips__id__status_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Trip Status Api V1 Trips  Id  Status Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trips/{id}/delivery-proof": {
+      "post": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Submit Delivery Proof",
+        "description": "Submit digital proof of delivery (EPOD) with signature and photo.",
+        "operationId": "submit_delivery_proof_api_v1_trips__id__delivery_proof_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryProofCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Submit Delivery Proof Api V1 Trips  Id  Delivery Proof Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/geofences": {
+      "post": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Create Geofence",
+        "description": "Create tactical geofence around disaster zones or supply depots.",
+        "operationId": "create_geofence_api_v1_geofences_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GeofenceCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Create Geofence Api V1 Geofences Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/geofences/{id}/events": {
+      "get": {
+        "tags": [
+          "Vehicles, Consignments & GPS Tracking"
+        ],
+        "summary": "Get Geofence Events",
+        "description": "Get entry/exit events for a geofenced area.",
+        "operationId": "get_geofence_events_api_v1_geofences__id__events_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Geofence Events Api V1 Geofences  Id  Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents": {
+      "post": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "Create Incident",
+        "description": "Report an incident (landslide, flood, bridge closure, congestion).",
+        "operationId": "create_incident_api_v1_incidents_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "List Incidents",
+        "description": "List all incidents with optional severity and status filters.",
+        "operationId": "list_incidents_api_v1_incidents_get",
+        "parameters": [
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          },
+          {
+            "name": "type_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type Filter"
+            }
+          },
+          {
+            "name": "severity_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Severity Filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IncidentResponse"
+                  },
+                  "title": "Response List Incidents Api V1 Incidents Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{id}": {
+      "get": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "Get Incident By Id",
+        "description": "Get single incident details.",
+        "operationId": "get_incident_by_id_api_v1_incidents__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "Update Incident",
+        "description": "Update incident status or estimated clearance.",
+        "operationId": "update_incident_api_v1_incidents__id__patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidentUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{id}/verify": {
+      "post": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "Verify Incident",
+        "description": "Official verification by District Officer or BRO/PWD Chief.",
+        "operationId": "verify_incident_api_v1_incidents__id__verify_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidentVerifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Verify Incident Api V1 Incidents  Id  Verify Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{id}/resolve": {
+      "post": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "Resolve Incident",
+        "description": "Mark an incident resolved after debris clearance or water recession.",
+        "operationId": "resolve_incident_api_v1_incidents__id__resolve_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Resolve Incident Api V1 Incidents  Id  Resolve Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/field-reports": {
+      "post": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "Submit Field Report",
+        "description": "Submit geo-tagged field report with offline UUID support.",
+        "operationId": "submit_field_report_api_v1_field_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FieldReportCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/field-reports/sync": {
+      "post": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "Sync Offline Reports",
+        "description": "Batch synchronize field reports queued during network blackout.",
+        "operationId": "sync_offline_reports_api_v1_field_reports_sync_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/FieldReportCreate"
+                },
+                "type": "array",
+                "title": "Payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Sync Offline Reports Api V1 Field Reports Sync Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/media/upload": {
+      "post": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "Upload Media File",
+        "description": "Direct upload for photos/videos of road damages and landslides.",
+        "operationId": "upload_media_file_api_v1_media_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_media_file_api_v1_media_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/media/{id}/presigned-url": {
+      "get": {
+        "tags": [
+          "Incidents & Field Reporting"
+        ],
+        "summary": "Get Presigned Url",
+        "description": "Obtain secure signed URL for S3/MinIO direct upload.",
+        "operationId": "get_presigned_url_api_v1_media__id__presigned_url_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "filename",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "hazard.jpg",
+              "title": "Filename"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Presigned Url Api V1 Media  Id  Presigned Url Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/alerts": {
+      "post": {
+        "tags": [
+          "Alerts & Tactical Emergency Coordination"
+        ],
+        "summary": "Create Alert",
+        "description": "Create automated or manual alert with AI deduplication check.",
+        "operationId": "create_alert_api_v1_alerts_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Alerts & Tactical Emergency Coordination"
+        ],
+        "summary": "List Alerts",
+        "description": "List operational alerts.",
+        "operationId": "list_alerts_api_v1_alerts_get",
+        "parameters": [
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "ACTIVE",
+              "title": "Status Filter"
+            }
+          },
+          {
+            "name": "severity_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Severity Filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertResponse"
+                  },
+                  "title": "Response List Alerts Api V1 Alerts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/alerts/{id}": {
+      "patch": {
+        "tags": [
+          "Alerts & Tactical Emergency Coordination"
+        ],
+        "summary": "Update Alert",
+        "description": "Acknowledge or resolve an active alert.",
+        "operationId": "update_alert_api_v1_alerts__id__patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/alerts/{id}/notify": {
+      "post": {
+        "tags": [
+          "Alerts & Tactical Emergency Coordination"
+        ],
+        "summary": "Dispatch Alert Notifications",
+        "description": "Broadcast alert across regional channels (WebSocket, SMS, Push, WhatsApp).",
+        "operationId": "dispatch_alert_notifications_api_v1_alerts__id__notify_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertNotifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Dispatch Alert Notifications Api V1 Alerts  Id  Notify Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "tags": [
+          "Alerts & Tactical Emergency Coordination"
+        ],
+        "summary": "Get User Notifications",
+        "description": "Get recent notifications dispatched to user.",
+        "operationId": "get_user_notifications_api_v1_notifications_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get User Notifications Api V1 Notifications Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/{id}/read": {
+      "patch": {
+        "tags": [
+          "Alerts & Tactical Emergency Coordination"
+        ],
+        "summary": "Mark Notification Read",
+        "description": "Acknowledge notification read receipt.",
+        "operationId": "mark_notification_read_api_v1_notifications__id__read_patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Mark Notification Read Api V1 Notifications  Id  Read Patch"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notification-preferences": {
+      "post": {
+        "tags": [
+          "Alerts & Tactical Emergency Coordination"
+        ],
+        "summary": "Save Notification Preferences",
+        "description": "Save multilingual and channel preferences.",
+        "operationId": "save_notification_preferences_api_v1_notification_preferences_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationPreferencesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Save Notification Preferences Api V1 Notification Preferences Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/emergency-events": {
+      "post": {
+        "tags": [
+          "Alerts & Tactical Emergency Coordination"
+        ],
+        "summary": "Activate Emergency Event",
+        "description": "Declare state-wide or district-wide emergency disaster mode (e.g. Monsoon Surge Level 3).",
+        "operationId": "activate_emergency_event_api_v1_emergency_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmergencyEventCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmergencyEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/emergency-events/{id}": {
+      "patch": {
+        "tags": [
+          "Alerts & Tactical Emergency Coordination"
+        ],
+        "summary": "Update Emergency Event",
+        "description": "Deactivate or update emergency disaster state.",
+        "operationId": "update_emergency_event_api_v1_emergency_events__id__patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmergencyEventUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmergencyEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboards/state-overview": {
+      "get": {
+        "tags": [
+          "Centralized Dashboards & Analytics"
+        ],
+        "summary": "Get State Overview",
+        "description": "Consolidated state operational overview for Command Deck.",
+        "operationId": "get_state_overview_api_v1_dashboards_state_overview_get",
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "AS",
+              "title": "State Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateOverviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboards/district/{id}": {
+      "get": {
+        "tags": [
+          "Centralized Dashboards & Analytics"
+        ],
+        "summary": "Get District Dashboard",
+        "description": "District Magistrate & District Officer dedicated view.",
+        "operationId": "get_district_dashboard_api_v1_dashboards_district__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DistrictDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboards/logistics-bottlenecks": {
+      "get": {
+        "tags": [
+          "Centralized Dashboards & Analytics"
+        ],
+        "summary": "Get Logistics Bottlenecks",
+        "description": "Active logistical chokepoints impeding critical supply chains.",
+        "operationId": "get_logistics_bottlenecks_api_v1_dashboards_logistics_bottlenecks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LogisticsBottleneckItem"
+                  },
+                  "type": "array",
+                  "title": "Response Get Logistics Bottlenecks Api V1 Dashboards Logistics Bottlenecks Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboards/emergency-overview": {
+      "get": {
+        "tags": [
+          "Centralized Dashboards & Analytics"
+        ],
+        "summary": "Get Emergency Overview",
+        "description": "Tactical emergency command view during disaster operations.",
+        "operationId": "get_emergency_overview_api_v1_dashboards_emergency_overview_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmergencyOverviewResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboards/vehicle-movement": {
+      "get": {
+        "tags": [
+          "Centralized Dashboards & Analytics"
+        ],
+        "summary": "Get Vehicle Movement",
+        "description": "Live fleet tracking dashboard.",
+        "operationId": "get_vehicle_movement_api_v1_dashboards_vehicle_movement_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VehicleMovementResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/delivery-performance": {
+      "get": {
+        "tags": [
+          "Centralized Dashboards & Analytics"
+        ],
+        "summary": "Get Delivery Performance",
+        "description": "Key performance metrics for delivery time and SLA.",
+        "operationId": "get_delivery_performance_api_v1_analytics_delivery_performance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsDeliveryPerformance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/disruption-trends": {
+      "get": {
+        "tags": [
+          "Centralized Dashboards & Analytics"
+        ],
+        "summary": "Get Disruption Trends",
+        "description": "Historical and 7-day predicted disruption trends.",
+        "operationId": "get_disruption_trends_api_v1_analytics_disruption_trends_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsDisruptionTrends"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/export": {
+      "get": {
+        "tags": [
+          "Centralized Dashboards & Analytics"
+        ],
+        "summary": "Export Analytics",
+        "description": "Export operational logs and incident metrics in CSV or JSON format.",
+        "operationId": "export_analytics_api_v1_analytics_export_get",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(csv|json)$",
+              "default": "csv",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync/queue": {
+      "post": {
+        "tags": [
+          "Offline-First Synchronization"
+        ],
+        "summary": "Sync Offline Queue",
+        "description": "Synchronize batched offline queue items:\n- Guarantees idempotency via client_uuid\n- Implements conflict resolution\n- Preserves causal order",
+        "operationId": "sync_offline_queue_api_v1_sync_queue_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncBatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync/delta": {
+      "get": {
+        "tags": [
+          "Offline-First Synchronization"
+        ],
+        "summary": "Get Delta Sync",
+        "description": "Provides delta synchronization using updated_at cursor.\nAllows mobile clients to fetch only entities modified since last synchronization.",
+        "operationId": "get_delta_sync_api_v1_sync_delta_get",
+        "parameters": [
+          {
+            "name": "last_synced_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO timestamp cursor from previous sync",
+              "title": "Last Synced At"
+            },
+            "description": "ISO timestamp cursor from previous sync"
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "District"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeltaSyncResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health & Status"
+        ],
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccessibilitySummaryResponse": {
+        "properties": {
+          "total_network_km": {
+            "type": "number",
+            "title": "Total Network Km"
+          },
+          "operational_pct": {
+            "type": "number",
+            "title": "Operational Pct"
+          },
+          "active_blockades_count": {
+            "type": "integer",
+            "title": "Active Blockades Count"
+          },
+          "cutoff_districts_count": {
+            "type": "integer",
+            "title": "Cutoff Districts Count"
+          },
+          "convoys_in_transit_count": {
+            "type": "integer",
+            "title": "Convoys In Transit Count"
+          },
+          "last_updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_network_km",
+          "operational_pct",
+          "active_blockades_count",
+          "cutoff_districts_count",
+          "convoys_in_transit_count",
+          "last_updated"
+        ],
+        "title": "AccessibilitySummaryResponse"
+      },
+      "AlertCreate": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "default": "HIGH"
+          },
+          "district_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District Id"
+          },
+          "road_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Id"
+          },
+          "location_desc": {
+            "type": "string",
+            "title": "Location Desc"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "location_desc",
+          "message"
+        ],
+        "title": "AlertCreate"
+      },
+      "AlertNotifyRequest": {
+        "properties": {
+          "channels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channels",
+            "default": [
+              "WEBSOCKET",
+              "PUSH",
+              "SMS"
+            ]
+          },
+          "target_districts": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Districts"
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority",
+            "default": "HIGH"
+          }
+        },
+        "type": "object",
+        "title": "AlertNotifyRequest"
+      },
+      "AlertResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "district_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District Id"
+          },
+          "road_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Id"
+          },
+          "location_desc": {
+            "type": "string",
+            "title": "Location Desc"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "severity",
+          "location_desc",
+          "message",
+          "status",
+          "created_at"
+        ],
+        "title": "AlertResponse"
+      },
+      "AnalyticsDeliveryPerformance": {
+        "properties": {
+          "on_time_delivery_rate": {
+            "type": "number",
+            "title": "On Time Delivery Rate"
+          },
+          "average_delay_minutes": {
+            "type": "number",
+            "title": "Average Delay Minutes"
+          },
+          "consignments_delivered_this_week": {
+            "type": "integer",
+            "title": "Consignments Delivered This Week"
+          },
+          "critical_medical_sla_compliance": {
+            "type": "number",
+            "title": "Critical Medical Sla Compliance"
+          },
+          "convoys_rerouted_due_to_ai": {
+            "type": "integer",
+            "title": "Convoys Rerouted Due To Ai"
+          }
+        },
+        "type": "object",
+        "required": [
+          "on_time_delivery_rate",
+          "average_delay_minutes",
+          "consignments_delivered_this_week",
+          "critical_medical_sla_compliance",
+          "convoys_rerouted_due_to_ai"
+        ],
+        "title": "AnalyticsDeliveryPerformance"
+      },
+      "AnalyticsDisruptionTrends": {
+        "properties": {
+          "time_series": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Time Series"
+          },
+          "highest_risk_corridors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Highest Risk Corridors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time_series",
+          "highest_risk_corridors"
+        ],
+        "title": "AnalyticsDisruptionTrends"
+      },
+      "Body_upload_media_file_api_v1_media_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_media_file_api_v1_media_upload_post"
+      },
+      "BridgeResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "road_id": {
+            "type": "string",
+            "title": "Road Id"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "load_capacity_mt": {
+            "type": "number",
+            "title": "Load Capacity Mt"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "structural_health_index": {
+            "type": "number",
+            "title": "Structural Health Index"
+          },
+          "last_inspection_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Inspection Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "road_id",
+          "lat",
+          "lon",
+          "load_capacity_mt",
+          "status",
+          "structural_health_index"
+        ],
+        "title": "BridgeResponse"
+      },
+      "ConsignmentCreate": {
+        "properties": {
+          "consignment_number": {
+            "type": "string",
+            "title": "Consignment Number"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "quantity_mt": {
+            "type": "number",
+            "title": "Quantity Mt"
+          },
+          "origin_name": {
+            "type": "string",
+            "title": "Origin Name"
+          },
+          "origin_lat": {
+            "type": "number",
+            "title": "Origin Lat"
+          },
+          "origin_lon": {
+            "type": "number",
+            "title": "Origin Lon"
+          },
+          "destination_name": {
+            "type": "string",
+            "title": "Destination Name"
+          },
+          "dest_lat": {
+            "type": "number",
+            "title": "Dest Lat"
+          },
+          "dest_lon": {
+            "type": "number",
+            "title": "Dest Lon"
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority",
+            "default": "GRADE_1_CRITICAL"
+          },
+          "temperature_requirement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Requirement"
+          }
+        },
+        "type": "object",
+        "required": [
+          "consignment_number",
+          "type",
+          "description",
+          "quantity_mt",
+          "origin_name",
+          "origin_lat",
+          "origin_lon",
+          "destination_name",
+          "dest_lat",
+          "dest_lon"
+        ],
+        "title": "ConsignmentCreate"
+      },
+      "ConsignmentResponse": {
+        "properties": {
+          "consignment_number": {
+            "type": "string",
+            "title": "Consignment Number"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "quantity_mt": {
+            "type": "number",
+            "title": "Quantity Mt"
+          },
+          "origin_name": {
+            "type": "string",
+            "title": "Origin Name"
+          },
+          "origin_lat": {
+            "type": "number",
+            "title": "Origin Lat"
+          },
+          "origin_lon": {
+            "type": "number",
+            "title": "Origin Lon"
+          },
+          "destination_name": {
+            "type": "string",
+            "title": "Destination Name"
+          },
+          "dest_lat": {
+            "type": "number",
+            "title": "Dest Lat"
+          },
+          "dest_lon": {
+            "type": "number",
+            "title": "Dest Lon"
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority",
+            "default": "GRADE_1_CRITICAL"
+          },
+          "temperature_requirement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Requirement"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "consignment_number",
+          "type",
+          "description",
+          "quantity_mt",
+          "origin_name",
+          "origin_lat",
+          "origin_lon",
+          "destination_name",
+          "dest_lat",
+          "dest_lon",
+          "id",
+          "status",
+          "created_at"
+        ],
+        "title": "ConsignmentResponse"
+      },
+      "DeliveryProofCreate": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "receiver_name": {
+            "type": "string",
+            "title": "Receiver Name"
+          },
+          "receiver_designation": {
+            "type": "string",
+            "title": "Receiver Designation",
+            "default": "Camp In-Charge"
+          },
+          "digital_signature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Digital Signature"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lon",
+          "receiver_name"
+        ],
+        "title": "DeliveryProofCreate"
+      },
+      "DeltaSyncResponse": {
+        "properties": {
+          "server_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Server Timestamp"
+          },
+          "updated_roads": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Updated Roads"
+          },
+          "updated_segments": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Updated Segments"
+          },
+          "active_incidents": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Active Incidents"
+          },
+          "active_alerts": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Active Alerts"
+          },
+          "active_convoys": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Active Convoys"
+          }
+        },
+        "type": "object",
+        "required": [
+          "server_timestamp",
+          "updated_roads",
+          "updated_segments",
+          "active_incidents",
+          "active_alerts",
+          "active_convoys"
+        ],
+        "title": "DeltaSyncResponse"
+      },
+      "DistrictConnectivityResponse": {
+        "properties": {
+          "district_id": {
+            "type": "string",
+            "title": "District Id"
+          },
+          "district_name": {
+            "type": "string",
+            "title": "District Name"
+          },
+          "isolation_index": {
+            "type": "number",
+            "title": "Isolation Index"
+          },
+          "connectivity_status": {
+            "type": "string",
+            "title": "Connectivity Status"
+          },
+          "critical_facilities_count": {
+            "type": "integer",
+            "title": "Critical Facilities Count"
+          },
+          "open_routes_count": {
+            "type": "integer",
+            "title": "Open Routes Count"
+          },
+          "blocked_routes_count": {
+            "type": "integer",
+            "title": "Blocked Routes Count"
+          },
+          "nearest_accessible_depot": {
+            "type": "string",
+            "title": "Nearest Accessible Depot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "district_id",
+          "district_name",
+          "isolation_index",
+          "connectivity_status",
+          "critical_facilities_count",
+          "open_routes_count",
+          "blocked_routes_count",
+          "nearest_accessible_depot"
+        ],
+        "title": "DistrictConnectivityResponse"
+      },
+      "DistrictDetailResponse": {
+        "properties": {
+          "district_id": {
+            "type": "string",
+            "title": "District Id"
+          },
+          "district_name": {
+            "type": "string",
+            "title": "District Name"
+          },
+          "state_name": {
+            "type": "string",
+            "title": "State Name"
+          },
+          "isolation_index": {
+            "type": "number",
+            "title": "Isolation Index"
+          },
+          "connectivity_status": {
+            "type": "string",
+            "title": "Connectivity Status"
+          },
+          "critical_facilities": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Critical Facilities"
+          },
+          "active_incidents_count": {
+            "type": "integer",
+            "title": "Active Incidents Count"
+          },
+          "weather_alert_level": {
+            "type": "string",
+            "title": "Weather Alert Level"
+          },
+          "rainfall_past_24h_mm": {
+            "type": "number",
+            "title": "Rainfall Past 24H Mm"
+          },
+          "accessible_highways": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Accessible Highways"
+          },
+          "blocked_highways": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Blocked Highways"
+          }
+        },
+        "type": "object",
+        "required": [
+          "district_id",
+          "district_name",
+          "state_name",
+          "isolation_index",
+          "connectivity_status",
+          "critical_facilities",
+          "active_incidents_count",
+          "weather_alert_level",
+          "rainfall_past_24h_mm",
+          "accessible_highways",
+          "blocked_highways"
+        ],
+        "title": "DistrictDetailResponse"
+      },
+      "DistrictRiskSummaryResponse": {
+        "properties": {
+          "district_id": {
+            "type": "string",
+            "title": "District Id"
+          },
+          "district_name": {
+            "type": "string",
+            "title": "District Name"
+          },
+          "average_landslide_risk": {
+            "type": "number",
+            "title": "Average Landslide Risk"
+          },
+          "average_flood_risk": {
+            "type": "number",
+            "title": "Average Flood Risk"
+          },
+          "critical_segments_count": {
+            "type": "integer",
+            "title": "Critical Segments Count"
+          },
+          "highest_risk_road": {
+            "type": "string",
+            "title": "Highest Risk Road"
+          },
+          "imd_warning_level": {
+            "type": "string",
+            "title": "Imd Warning Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "district_id",
+          "district_name",
+          "average_landslide_risk",
+          "average_flood_risk",
+          "critical_segments_count",
+          "highest_risk_road",
+          "imd_warning_level"
+        ],
+        "title": "DistrictRiskSummaryResponse"
+      },
+      "EmergencyCorridorResponse": {
+        "properties": {
+          "corridor_code": {
+            "type": "string",
+            "title": "Corridor Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "from_city": {
+            "type": "string",
+            "title": "From City"
+          },
+          "to_city": {
+            "type": "string",
+            "title": "To City"
+          },
+          "clearance_priority": {
+            "type": "string",
+            "title": "Clearance Priority"
+          },
+          "escort_regiment": {
+            "type": "string",
+            "title": "Escort Regiment"
+          },
+          "current_convoy_count": {
+            "type": "integer",
+            "title": "Current Convoy Count"
+          },
+          "elevation_profile": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Elevation Profile"
+          }
+        },
+        "type": "object",
+        "required": [
+          "corridor_code",
+          "name",
+          "status",
+          "from_city",
+          "to_city",
+          "clearance_priority",
+          "escort_regiment",
+          "current_convoy_count",
+          "elevation_profile"
+        ],
+        "title": "EmergencyCorridorResponse"
+      },
+      "EmergencyEventCreate": {
+        "properties": {
+          "event_code": {
+            "type": "string",
+            "title": "Event Code"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": "MONSOON_SURGE"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level",
+            "default": "LEVEL_3"
+          },
+          "affected_districts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Districts"
+          },
+          "priority_corridors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Priority Corridors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_code",
+          "title",
+          "affected_districts",
+          "priority_corridors"
+        ],
+        "title": "EmergencyEventCreate"
+      },
+      "EmergencyEventResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "event_code": {
+            "type": "string",
+            "title": "Event Code"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "affected_districts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Districts"
+          },
+          "priority_corridors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Priority Corridors"
+          },
+          "activated_by": {
+            "type": "string",
+            "title": "Activated By"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_code",
+          "title",
+          "type",
+          "level",
+          "affected_districts",
+          "priority_corridors",
+          "activated_by",
+          "start_time",
+          "is_active"
+        ],
+        "title": "EmergencyEventResponse"
+      },
+      "EmergencyEventUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "affected_districts": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Districts"
+          },
+          "priority_corridors": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Corridors"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "EmergencyEventUpdate"
+      },
+      "EmergencyOverviewResponse": {
+        "properties": {
+          "active_emergency_event": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Emergency Event"
+          },
+          "sos_beacons_active": {
+            "type": "integer",
+            "title": "Sos Beacons Active"
+          },
+          "priority_corridors_status": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Priority Corridors Status"
+          },
+          "relief_camps_supplied_pct": {
+            "type": "number",
+            "title": "Relief Camps Supplied Pct"
+          },
+          "cryo_cargo_status_summary": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Cryo Cargo Status Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sos_beacons_active",
+          "priority_corridors_status",
+          "relief_camps_supplied_pct",
+          "cryo_cargo_status_summary"
+        ],
+        "title": "EmergencyOverviewResponse"
+      },
+      "FieldReportCreate": {
+        "properties": {
+          "client_uuid": {
+            "type": "string",
+            "title": "Client Uuid"
+          },
+          "incident_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incident Id"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "accuracy_m": {
+            "type": "number",
+            "title": "Accuracy M",
+            "default": 5.0
+          },
+          "disruption_type": {
+            "type": "string",
+            "title": "Disruption Type"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "default": "CRITICAL"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "media_files": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Files"
+          },
+          "offline_created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Offline Created At"
+          },
+          "device_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_uuid",
+          "lat",
+          "lon",
+          "disruption_type",
+          "description",
+          "offline_created_at"
+        ],
+        "title": "FieldReportCreate"
+      },
+      "FieldReportResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "client_uuid": {
+            "type": "string",
+            "title": "Client Uuid"
+          },
+          "incident_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incident Id"
+          },
+          "reporter_id": {
+            "type": "string",
+            "title": "Reporter Id"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "accuracy_m": {
+            "type": "number",
+            "title": "Accuracy M"
+          },
+          "disruption_type": {
+            "type": "string",
+            "title": "Disruption Type"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "media_files": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Files"
+          },
+          "offline_created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Offline Created At"
+          },
+          "synced_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Synced At"
+          },
+          "sync_status": {
+            "type": "string",
+            "title": "Sync Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "client_uuid",
+          "reporter_id",
+          "lat",
+          "lon",
+          "accuracy_m",
+          "disruption_type",
+          "severity",
+          "description",
+          "offline_created_at",
+          "synced_at",
+          "sync_status"
+        ],
+        "title": "FieldReportResponse"
+      },
+      "GPSBatchIngestRequest": {
+        "properties": {
+          "vehicle_id": {
+            "type": "string",
+            "title": "Vehicle Id"
+          },
+          "readings": {
+            "items": {
+              "$ref": "#/components/schemas/GPSReadingCreate"
+            },
+            "type": "array",
+            "title": "Readings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vehicle_id",
+          "readings"
+        ],
+        "title": "GPSBatchIngestRequest"
+      },
+      "GPSReadingCreate": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "speed_kmh": {
+            "type": "number",
+            "title": "Speed Kmh",
+            "default": 0.0
+          },
+          "heading_deg": {
+            "type": "number",
+            "title": "Heading Deg",
+            "default": 0.0
+          },
+          "accuracy_m": {
+            "type": "number",
+            "title": "Accuracy M",
+            "default": 2.5
+          },
+          "altitude_m": {
+            "type": "number",
+            "title": "Altitude M",
+            "default": 250.0
+          },
+          "ignition_status": {
+            "type": "boolean",
+            "title": "Ignition Status",
+            "default": true
+          },
+          "engine_temp_c": {
+            "type": "number",
+            "title": "Engine Temp C",
+            "default": 85.0
+          },
+          "cryo_temp_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cryo Temp C"
+          },
+          "navic_satellite_count": {
+            "type": "integer",
+            "title": "Navic Satellite Count",
+            "default": 9
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "latitude",
+          "longitude"
+        ],
+        "title": "GPSReadingCreate"
+      },
+      "GeofenceCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "center_lat": {
+            "type": "number",
+            "title": "Center Lat"
+          },
+          "center_lon": {
+            "type": "number",
+            "title": "Center Lon"
+          },
+          "radius_meters": {
+            "type": "number",
+            "title": "Radius Meters",
+            "default": 1000.0
+          },
+          "polygon_geojson": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Polygon Geojson"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "center_lat",
+          "center_lon"
+        ],
+        "title": "GeofenceCreate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IncidentCreate": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "default": "HIGH"
+          },
+          "location_desc": {
+            "type": "string",
+            "title": "Location Desc"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "road_segment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Segment Id"
+          },
+          "district_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "estimated_clearance_hours": {
+            "type": "number",
+            "title": "Estimated Clearance Hours",
+            "default": 4.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "location_desc",
+          "lat",
+          "lon",
+          "description"
+        ],
+        "title": "IncidentCreate"
+      },
+      "IncidentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "location_desc": {
+            "type": "string",
+            "title": "Location Desc"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "road_segment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Segment Id"
+          },
+          "district_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "reported_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reported By"
+          },
+          "verified_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified By"
+          },
+          "estimated_clearance_hours": {
+            "type": "number",
+            "title": "Estimated Clearance Hours"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "severity",
+          "location_desc",
+          "lat",
+          "lon",
+          "description",
+          "status",
+          "estimated_clearance_hours",
+          "created_at"
+        ],
+        "title": "IncidentResponse"
+      },
+      "IncidentUpdate": {
+        "properties": {
+          "severity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "estimated_clearance_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Clearance Hours"
+          }
+        },
+        "type": "object",
+        "title": "IncidentUpdate"
+      },
+      "IncidentVerifyRequest": {
+        "properties": {
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks"
+          },
+          "updated_severity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated Severity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verified"
+        ],
+        "title": "IncidentVerifyRequest"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "LogisticsBottleneckItem": {
+        "properties": {
+          "corridor_code": {
+            "type": "string",
+            "title": "Corridor Code"
+          },
+          "corridor_name": {
+            "type": "string",
+            "title": "Corridor Name"
+          },
+          "chokepoint_name": {
+            "type": "string",
+            "title": "Chokepoint Name"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "issue_type": {
+            "type": "string",
+            "title": "Issue Type"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "traffic_delay_min": {
+            "type": "number",
+            "title": "Traffic Delay Min"
+          },
+          "pwd_excavators_on_standby": {
+            "type": "integer",
+            "title": "Pwd Excavators On Standby"
+          },
+          "bypass_available": {
+            "type": "boolean",
+            "title": "Bypass Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "corridor_code",
+          "corridor_name",
+          "chokepoint_name",
+          "lat",
+          "lon",
+          "issue_type",
+          "severity",
+          "traffic_delay_min",
+          "pwd_excavators_on_standby",
+          "bypass_available"
+        ],
+        "title": "LogisticsBottleneckItem"
+      },
+      "MediaUploadResponse": {
+        "properties": {
+          "media_id": {
+            "type": "string",
+            "title": "Media Id"
+          },
+          "file_url": {
+            "type": "string",
+            "title": "File Url"
+          },
+          "checksum_sha256": {
+            "type": "string",
+            "title": "Checksum Sha256"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "virus_scanned": {
+            "type": "boolean",
+            "title": "Virus Scanned"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media_id",
+          "file_url",
+          "checksum_sha256",
+          "size_bytes",
+          "virus_scanned"
+        ],
+        "title": "MediaUploadResponse"
+      },
+      "NotificationPreferencesRequest": {
+        "properties": {
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Channels"
+          },
+          "districts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Districts"
+          },
+          "alert_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Alert Types"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "channels",
+          "districts",
+          "alert_types",
+          "language"
+        ],
+        "title": "NotificationPreferencesRequest"
+      },
+      "NotificationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "alert_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert Id"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "message_text": {
+            "type": "string",
+            "title": "Message Text"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sent At"
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "channel",
+          "language",
+          "message_text",
+          "status",
+          "sent_at"
+        ],
+        "title": "NotificationResponse"
+      },
+      "OTPRequest": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone"
+        ],
+        "title": "OTPRequest"
+      },
+      "OTPVerify": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "otp": {
+            "type": "string",
+            "title": "Otp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone",
+          "otp"
+        ],
+        "title": "OTPVerify"
+      },
+      "PreferencesUpdate": {
+        "properties": {
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "title": "PreferencesUpdate"
+      },
+      "RiskRecomputeRequest": {
+        "properties": {
+          "district_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District Id"
+          },
+          "force_all": {
+            "type": "boolean",
+            "title": "Force All",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "RiskRecomputeRequest"
+      },
+      "RoadResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "surface": {
+            "type": "string",
+            "title": "Surface"
+          },
+          "lanes": {
+            "type": "integer",
+            "title": "Lanes"
+          },
+          "owner_department": {
+            "type": "string",
+            "title": "Owner Department"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "code",
+          "type",
+          "surface",
+          "lanes",
+          "owner_department",
+          "status",
+          "id",
+          "created_at"
+        ],
+        "title": "RoadResponse"
+      },
+      "RoadSegmentResponse": {
+        "properties": {
+          "road_id": {
+            "type": "string",
+            "title": "Road Id"
+          },
+          "start_point_name": {
+            "type": "string",
+            "title": "Start Point Name"
+          },
+          "end_point_name": {
+            "type": "string",
+            "title": "End Point Name"
+          },
+          "start_lat": {
+            "type": "number",
+            "title": "Start Lat"
+          },
+          "start_lon": {
+            "type": "number",
+            "title": "Start Lon"
+          },
+          "end_lat": {
+            "type": "number",
+            "title": "End Lat"
+          },
+          "end_lon": {
+            "type": "number",
+            "title": "End Lon"
+          },
+          "length_km": {
+            "type": "number",
+            "title": "Length Km"
+          },
+          "elevation_m": {
+            "type": "number",
+            "title": "Elevation M"
+          },
+          "slope_degrees": {
+            "type": "number",
+            "title": "Slope Degrees"
+          },
+          "flood_risk_score": {
+            "type": "number",
+            "title": "Flood Risk Score"
+          },
+          "landslide_risk_score": {
+            "type": "number",
+            "title": "Landslide Risk Score"
+          },
+          "current_status": {
+            "type": "string",
+            "title": "Current Status"
+          },
+          "speed_limit_kmh": {
+            "type": "number",
+            "title": "Speed Limit Kmh"
+          },
+          "current_travel_time_min": {
+            "type": "number",
+            "title": "Current Travel Time Min"
+          },
+          "expected_delay_min": {
+            "type": "number",
+            "title": "Expected Delay Min"
+          },
+          "geometry_geojson": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry Geojson"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "road_id",
+          "start_point_name",
+          "end_point_name",
+          "start_lat",
+          "start_lon",
+          "end_lat",
+          "end_lon",
+          "length_km",
+          "elevation_m",
+          "slope_degrees",
+          "flood_risk_score",
+          "landslide_risk_score",
+          "current_status",
+          "speed_limit_kmh",
+          "current_travel_time_min",
+          "expected_delay_min",
+          "id",
+          "updated_at"
+        ],
+        "title": "RoadSegmentResponse"
+      },
+      "RoadStatusEventCreate": {
+        "properties": {
+          "segment_id": {
+            "type": "string",
+            "title": "Segment Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence",
+            "default": 0.95
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "segment_id",
+          "status",
+          "source"
+        ],
+        "title": "RoadStatusEventCreate"
+      },
+      "RouteAssignRequest": {
+        "properties": {
+          "trip_id": {
+            "type": "string",
+            "title": "Trip Id"
+          },
+          "route_option_id": {
+            "type": "string",
+            "title": "Route Option Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trip_id",
+          "route_option_id"
+        ],
+        "title": "RouteAssignRequest"
+      },
+      "RouteOptionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "option_tag": {
+            "type": "string",
+            "title": "Option Tag"
+          },
+          "route_name": {
+            "type": "string",
+            "title": "Route Name"
+          },
+          "corridor_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corridor Summary"
+          },
+          "waypoints": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Waypoints"
+          },
+          "distance_km": {
+            "type": "number",
+            "title": "Distance Km"
+          },
+          "estimated_travel_time_hours": {
+            "type": "number",
+            "title": "Estimated Travel Time Hours"
+          },
+          "expected_delay_hours": {
+            "type": "number",
+            "title": "Expected Delay Hours"
+          },
+          "risk_score": {
+            "type": "number",
+            "title": "Risk Score"
+          },
+          "slide_risk_pct": {
+            "type": "number",
+            "title": "Slide Risk Pct"
+          },
+          "max_gradient_m": {
+            "type": "number",
+            "title": "Max Gradient M"
+          },
+          "blocked_segments_count": {
+            "type": "integer",
+            "title": "Blocked Segments Count"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "is_recommended": {
+            "type": "boolean",
+            "title": "Is Recommended"
+          },
+          "operational_status": {
+            "type": "string",
+            "title": "Operational Status"
+          },
+          "standby_excavators": {
+            "type": "integer",
+            "title": "Standby Excavators"
+          },
+          "tolls_count": {
+            "type": "integer",
+            "title": "Tolls Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "option_tag",
+          "route_name",
+          "waypoints",
+          "distance_km",
+          "estimated_travel_time_hours",
+          "expected_delay_hours",
+          "risk_score",
+          "slide_risk_pct",
+          "max_gradient_m",
+          "blocked_segments_count",
+          "confidence",
+          "is_recommended",
+          "operational_status",
+          "standby_excavators",
+          "tolls_count"
+        ],
+        "title": "RouteOptionResponse"
+      },
+      "RoutePlanRequest": {
+        "properties": {
+          "origin_name": {
+            "type": "string",
+            "title": "Origin Name"
+          },
+          "origin_lat": {
+            "type": "number",
+            "title": "Origin Lat"
+          },
+          "origin_lon": {
+            "type": "number",
+            "title": "Origin Lon"
+          },
+          "destination_name": {
+            "type": "string",
+            "title": "Destination Name"
+          },
+          "dest_lat": {
+            "type": "number",
+            "title": "Dest Lat"
+          },
+          "dest_lon": {
+            "type": "number",
+            "title": "Dest Lon"
+          },
+          "vehicle_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle Type",
+            "default": "MULTI_AXLE_HEAVY"
+          },
+          "cargo_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cargo Type",
+            "default": "CRITICAL_RELIEF"
+          },
+          "departure_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departure Time"
+          },
+          "optimization_priority": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Optimization Priority",
+            "default": "SAFEST"
+          },
+          "alpha_travel_time": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha Travel Time",
+            "default": 0.45
+          },
+          "beta_risk": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Beta Risk",
+            "default": 0.4
+          },
+          "gamma_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gamma Cost",
+            "default": 0.15
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin_name",
+          "origin_lat",
+          "origin_lon",
+          "destination_name",
+          "dest_lat",
+          "dest_lon"
+        ],
+        "title": "RoutePlanRequest"
+      },
+      "RoutePlanResult": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination"
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "is_direct_route_available": {
+            "type": "boolean",
+            "title": "Is Direct Route Available"
+          },
+          "alternative_safe_shelter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alternative Safe Shelter"
+          },
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/RouteOptionResponse"
+            },
+            "type": "array",
+            "title": "Routes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "origin",
+          "destination",
+          "priority",
+          "generated_at",
+          "is_direct_route_available",
+          "routes"
+        ],
+        "title": "RoutePlanResult"
+      },
+      "RouteReoptimizeRequest": {
+        "properties": {
+          "trip_id": {
+            "type": "string",
+            "title": "Trip Id"
+          },
+          "current_lat": {
+            "type": "number",
+            "title": "Current Lat"
+          },
+          "current_lon": {
+            "type": "number",
+            "title": "Current Lon"
+          },
+          "detected_blockade_segment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detected Blockade Segment Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trip_id",
+          "current_lat",
+          "current_lon"
+        ],
+        "title": "RouteReoptimizeRequest"
+      },
+      "SegmentRiskResponse": {
+        "properties": {
+          "segment_id": {
+            "type": "string",
+            "title": "Segment Id"
+          },
+          "road_name": {
+            "type": "string",
+            "title": "Road Name"
+          },
+          "risk_type": {
+            "type": "string",
+            "title": "Risk Type"
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid From"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid To"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "contributing_factors": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contributing Factors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "segment_id",
+          "road_name",
+          "risk_type",
+          "probability",
+          "severity",
+          "valid_from",
+          "valid_to",
+          "model_version",
+          "confidence"
+        ],
+        "title": "SegmentRiskResponse"
+      },
+      "StateOverviewResponse": {
+        "properties": {
+          "state_code": {
+            "type": "string",
+            "title": "State Code"
+          },
+          "state_name": {
+            "type": "string",
+            "title": "State Name"
+          },
+          "total_roads_km": {
+            "type": "number",
+            "title": "Total Roads Km"
+          },
+          "operational_pct": {
+            "type": "number",
+            "title": "Operational Pct"
+          },
+          "active_blockades": {
+            "type": "integer",
+            "title": "Active Blockades"
+          },
+          "cutoff_districts": {
+            "type": "integer",
+            "title": "Cutoff Districts"
+          },
+          "convoys_en_route": {
+            "type": "integer",
+            "title": "Convoys En Route"
+          },
+          "telemetry_stations_active": {
+            "type": "integer",
+            "title": "Telemetry Stations Active"
+          },
+          "telemetry_stations_total": {
+            "type": "integer",
+            "title": "Telemetry Stations Total"
+          },
+          "navic_sync_pct": {
+            "type": "number",
+            "title": "Navic Sync Pct"
+          },
+          "monsoon_surge_level": {
+            "type": "string",
+            "title": "Monsoon Surge Level"
+          },
+          "active_incidents": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Active Incidents"
+          },
+          "chokepoints": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Chokepoints"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state_code",
+          "state_name",
+          "total_roads_km",
+          "operational_pct",
+          "active_blockades",
+          "cutoff_districts",
+          "convoys_en_route",
+          "telemetry_stations_active",
+          "telemetry_stations_total",
+          "navic_sync_pct",
+          "monsoon_surge_level",
+          "active_incidents",
+          "chokepoints"
+        ],
+        "title": "StateOverviewResponse"
+      },
+      "SyncBatchRequest": {
+        "properties": {
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "sync_session_id": {
+            "type": "string",
+            "title": "Sync Session Id"
+          },
+          "queue_items": {
+            "items": {
+              "$ref": "#/components/schemas/SyncQueueItem"
+            },
+            "type": "array",
+            "title": "Queue Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_id",
+          "sync_session_id",
+          "queue_items"
+        ],
+        "title": "SyncBatchRequest"
+      },
+      "SyncBatchResponse": {
+        "properties": {
+          "sync_session_id": {
+            "type": "string",
+            "title": "Sync Session Id"
+          },
+          "processed_count": {
+            "type": "integer",
+            "title": "Processed Count"
+          },
+          "success_count": {
+            "type": "integer",
+            "title": "Success Count"
+          },
+          "conflict_count": {
+            "type": "integer",
+            "title": "Conflict Count"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SyncItemResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sync_session_id",
+          "processed_count",
+          "success_count",
+          "conflict_count",
+          "results"
+        ],
+        "title": "SyncBatchResponse"
+      },
+      "SyncItemResult": {
+        "properties": {
+          "client_uuid": {
+            "type": "string",
+            "title": "Client Uuid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "server_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Id"
+          },
+          "conflict_details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conflict Details"
+          },
+          "processed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Processed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_uuid",
+          "status",
+          "processed_at"
+        ],
+        "title": "SyncItemResult"
+      },
+      "SyncQueueItem": {
+        "properties": {
+          "queue_id": {
+            "type": "string",
+            "title": "Queue Id"
+          },
+          "client_uuid": {
+            "type": "string",
+            "title": "Client Uuid"
+          },
+          "operation": {
+            "type": "string",
+            "title": "Operation"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          },
+          "client_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Client Timestamp"
+          },
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "retry_count": {
+            "type": "integer",
+            "title": "Retry Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "queue_id",
+          "client_uuid",
+          "operation",
+          "payload",
+          "client_timestamp",
+          "device_id"
+        ],
+        "title": "SyncQueueItem"
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "user": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "User"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "user"
+        ],
+        "title": "Token"
+      },
+      "TokenRefreshRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "TokenRefreshRequest"
+      },
+      "TripCreate": {
+        "properties": {
+          "vehicle_id": {
+            "type": "string",
+            "title": "Vehicle Id"
+          },
+          "driver_id": {
+            "type": "string",
+            "title": "Driver Id"
+          },
+          "consignment_id": {
+            "type": "string",
+            "title": "Consignment Id"
+          },
+          "planned_route_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Route Id"
+          },
+          "departure_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departure Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vehicle_id",
+          "driver_id",
+          "consignment_id"
+        ],
+        "title": "TripCreate"
+      },
+      "TripResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "trip_code": {
+            "type": "string",
+            "title": "Trip Code"
+          },
+          "vehicle_id": {
+            "type": "string",
+            "title": "Vehicle Id"
+          },
+          "driver_id": {
+            "type": "string",
+            "title": "Driver Id"
+          },
+          "consignment_id": {
+            "type": "string",
+            "title": "Consignment Id"
+          },
+          "departure_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Departure Time"
+          },
+          "estimated_arrival_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Arrival Time"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "current_delay_min": {
+            "type": "number",
+            "title": "Current Delay Min"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "trip_code",
+          "vehicle_id",
+          "driver_id",
+          "consignment_id",
+          "status",
+          "current_delay_min",
+          "created_at"
+        ],
+        "title": "TripResponse"
+      },
+      "UserCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State",
+            "default": "Assam"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "default": "en"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "phone",
+          "email",
+          "role",
+          "password"
+        ],
+        "title": "UserCreate"
+      },
+      "UserResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State",
+            "default": "Assam"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "default": "en"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "phone",
+          "email",
+          "role",
+          "id",
+          "status",
+          "created_at"
+        ],
+        "title": "UserResponse"
+      },
+      "UserUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdate"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VehicleCreate": {
+        "properties": {
+          "registration_number": {
+            "type": "string",
+            "title": "Registration Number"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "capacity_mt": {
+            "type": "number",
+            "title": "Capacity Mt",
+            "default": 15.0
+          },
+          "owner": {
+            "type": "string",
+            "title": "Owner",
+            "default": "Govt of Assam Logistics"
+          },
+          "driver_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "registration_number",
+          "type"
+        ],
+        "title": "VehicleCreate"
+      },
+      "VehicleMovementResponse": {
+        "properties": {
+          "total_vehicles_active": {
+            "type": "integer",
+            "title": "Total Vehicles Active"
+          },
+          "vehicles_in_transit": {
+            "type": "integer",
+            "title": "Vehicles In Transit"
+          },
+          "vehicles_stalled_or_delayed": {
+            "type": "integer",
+            "title": "Vehicles Stalled Or Delayed"
+          },
+          "cryo_alerts_count": {
+            "type": "integer",
+            "title": "Cryo Alerts Count"
+          },
+          "live_fleet": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Live Fleet"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_vehicles_active",
+          "vehicles_in_transit",
+          "vehicles_stalled_or_delayed",
+          "cryo_alerts_count",
+          "live_fleet"
+        ],
+        "title": "VehicleMovementResponse"
+      },
+      "VehicleResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "registration_number": {
+            "type": "string",
+            "title": "Registration Number"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "capacity_mt": {
+            "type": "number",
+            "title": "Capacity Mt"
+          },
+          "owner": {
+            "type": "string",
+            "title": "Owner"
+          },
+          "driver_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Id"
+          },
+          "current_status": {
+            "type": "string",
+            "title": "Current Status"
+          },
+          "last_lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Lat"
+          },
+          "last_lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Lon"
+          },
+          "last_speed_kmh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Speed Kmh",
+            "default": 0.0
+          },
+          "last_heading_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Heading Deg",
+            "default": 0.0
+          },
+          "cryo_temp_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cryo Temp C"
+          },
+          "last_ping_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Ping Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "registration_number",
+          "type",
+          "capacity_mt",
+          "owner",
+          "current_status"
+        ],
+        "title": "VehicleResponse"
+      },
+      "WarningResponse": {
+        "properties": {
+          "district_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "District Id"
+          },
+          "district_name": {
+            "type": "string",
+            "title": "District Name"
+          },
+          "warning_level": {
+            "type": "string",
+            "title": "Warning Level"
+          },
+          "bulletin": {
+            "type": "string",
+            "title": "Bulletin"
+          },
+          "effective_until": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Effective Until"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "district_name",
+          "warning_level",
+          "bulletin",
+          "effective_until",
+          "issued_at"
+        ],
+        "title": "WarningResponse"
+      },
+      "WeatherCurrentResponse": {
+        "properties": {
+          "station_name": {
+            "type": "string",
+            "title": "Station Name"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "rainfall_mm": {
+            "type": "number",
+            "title": "Rainfall Mm"
+          },
+          "temperature_c": {
+            "type": "number",
+            "title": "Temperature C"
+          },
+          "wind_kmh": {
+            "type": "number",
+            "title": "Wind Kmh"
+          },
+          "humidity_pct": {
+            "type": "number",
+            "title": "Humidity Pct"
+          },
+          "warning_level": {
+            "type": "string",
+            "title": "Warning Level"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "station_name",
+          "lat",
+          "lon",
+          "timestamp",
+          "rainfall_mm",
+          "temperature_c",
+          "wind_kmh",
+          "humidity_pct",
+          "warning_level",
+          "source"
+        ],
+        "title": "WeatherCurrentResponse"
+      },
+      "WeatherForecastResponse": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "forecast_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Forecast Time"
+          },
+          "rainfall_predicted_mm": {
+            "type": "number",
+            "title": "Rainfall Predicted Mm"
+          },
+          "warning_level": {
+            "type": "string",
+            "title": "Warning Level"
+          },
+          "bulletin_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bulletin Text"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lon",
+          "forecast_time",
+          "rainfall_predicted_mm",
+          "warning_level",
+          "source"
+        ],
+        "title": "WeatherForecastResponse"
+      }
+    }
+  }
+}
