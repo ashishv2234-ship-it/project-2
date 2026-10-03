@@ -18,6 +18,24 @@ router = APIRouter(
 )
 
 
+def _process_sync_payload(
+    payload: SyncBatchRequest,
+    db: Session,
+) -> dict[str, Any]:
+    """Process a synchronization payload through the shared sync engine."""
+    result = offline_sync_engine.process_sync_batch(
+        db=db,
+        user_id=payload.device_id,
+        device_id=payload.device_id,
+        queue_items=[item.model_dump(mode="json") for item in payload.queue_items],
+    )
+
+    return {
+        "sync_session_id": payload.sync_session_id,
+        **result,
+    }
+
+
 @router.post(
     "/batch",
     response_model=SyncBatchResponse,
@@ -30,22 +48,34 @@ def synchronize_batch(
     Process an offline synchronization batch from a field device.
     """
     try:
-        result = offline_sync_engine.process_sync_batch(
-            db=db,
-            user_id=payload.device_id,
-            device_id=payload.device_id,
-            queue_items=[item.model_dump(mode="json") for item in payload.queue_items],
-        )
-
-        return {
-            "sync_session_id": payload.sync_session_id,
-            **result,
-        }
+        return _process_sync_payload(payload, db)
 
     except (TypeError, ValueError, KeyError) as exc:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid synchronization data: {exc}",
+        ) from exc
+
+
+@router.post(
+    "/queue",
+    response_model=SyncBatchResponse,
+)
+def queue_offline_data(
+    payload: SyncBatchRequest,
+    db: Session = Depends(get_db),
+) -> Any:
+    """
+    Compatibility endpoint for clients using the queue-based
+    offline synchronization API.
+    """
+    try:
+        return _process_sync_payload(payload, db)
+
+    except (TypeError, ValueError, KeyError) as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unable to synchronize queued data: {exc}",
         ) from exc
 
 
@@ -84,17 +114,7 @@ def push_offline_data(
     Push queued offline records to the central backend.
     """
     try:
-        result = offline_sync_engine.process_sync_batch(
-            db=db,
-            user_id=payload.device_id,
-            device_id=payload.device_id,
-            queue_items=[item.model_dump(mode="json") for item in payload.queue_items],
-        )
-
-        return {
-            "sync_session_id": payload.sync_session_id,
-            **result,
-        }
+        return _process_sync_payload(payload, db)
 
     except (TypeError, ValueError, KeyError) as exc:
         raise HTTPException(
@@ -114,10 +134,11 @@ def pull_latest_data(
     """
     Retrieve updates for an offline client.
 
-    The current offline synchronization engine does not expose
-    a delta-sync retrieval method, so this endpoint reports that
-    the pull operation is not yet implemented.
+    The current synchronization engine does not expose a
+    delta-sync retrieval method, so this endpoint currently
+    reports that the operation is not implemented.
     """
+    del payload
     del db
 
     raise HTTPException(
@@ -127,3 +148,30 @@ def pull_latest_data(
             "current offline synchronization engine."
         ),
     )
+
+
+@router.get(
+    "/delta",
+    response_model=DeltaSyncResponse,
+)
+def get_delta_sync(
+    db: Session = Depends(get_db),
+) -> Any:
+    """
+    Return the current delta-sync structure expected by
+    queue-based offline clients.
+
+    The current synchronization engine does not expose a
+    delta retrieval method, so empty collections are returned
+    with the current server timestamp.
+    """
+    del db
+
+    return {
+        "server_timestamp": datetime.now(UTC),
+        "updated_roads": [],
+        "updated_segments": [],
+        "active_incidents": [],
+        "active_alerts": [],
+        "active_convoys": [],
+    }
