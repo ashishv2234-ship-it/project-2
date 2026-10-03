@@ -1,13 +1,17 @@
 from datetime import datetime
-from typing import Optional, List
+
 from pydantic import BaseModel
+
 
 class VehicleCreate(BaseModel):
     registration_number: str
-    type: str # CRYO_TANKER, MULTI_AXLE_HEAVY, 4X4_TACTICAL_PICKUP, AMBULANCE, NDRF_EVAC
+    type: (
+        str  # CRYO_TANKER, MULTI_AXLE_HEAVY, 4X4_TACTICAL_PICKUP, AMBULANCE, NDRF_EVAC
+    )
     capacity_mt: float = 15.0
     owner: str = "Govt of Assam Logistics"
-    driver_id: Optional[str] = None
+    driver_id: str | None = None
+
 
 class VehicleResponse(BaseModel):
     id: str
@@ -15,17 +19,18 @@ class VehicleResponse(BaseModel):
     type: str
     capacity_mt: float
     owner: str
-    driver_id: Optional[str] = None
+    driver_id: str | None = None
     current_status: str
-    last_lat: Optional[float] = None
-    last_lon: Optional[float] = None
-    last_speed_kmh: Optional[float] = 0.0
-    last_heading_deg: Optional[float] = 0.0
-    cryo_temp_c: Optional[float] = None
-    last_ping_time: Optional[datetime] = None
+    last_lat: float | None = None
+    last_lon: float | None = None
+    last_speed_kmh: float | None = 0.0
+    last_heading_deg: float | None = 0.0
+    cryo_temp_c: float | None = None
+    last_ping_time: datetime | None = None
 
     class Config:
         from_attributes = True
+
 
 class GPSReadingCreate(BaseModel):
     timestamp: datetime
@@ -37,12 +42,14 @@ class GPSReadingCreate(BaseModel):
     altitude_m: float = 250.0
     ignition_status: bool = True
     engine_temp_c: float = 85.0
-    cryo_temp_c: Optional[float] = None
+    cryo_temp_c: float | None = None
     navic_satellite_count: int = 9
+
 
 class GPSBatchIngestRequest(BaseModel):
     vehicle_id: str
-    readings: List[GPSReadingCreate]
+    readings: list[GPSReadingCreate]
+
 
 class ConsignmentCreate(BaseModel):
     consignment_number: str
@@ -56,7 +63,8 @@ class ConsignmentCreate(BaseModel):
     dest_lat: float
     dest_lon: float
     priority: str = "GRADE_1_CRITICAL"
-    temperature_requirement: Optional[str] = None
+    temperature_requirement: str | None = None
+
 
 class ConsignmentResponse(ConsignmentCreate):
     id: str
@@ -66,12 +74,14 @@ class ConsignmentResponse(ConsignmentCreate):
     class Config:
         from_attributes = True
 
+
 class TripCreate(BaseModel):
     vehicle_id: str
     driver_id: str
     consignment_id: str
-    planned_route_id: Optional[str] = None
-    departure_time: Optional[datetime] = None
+    planned_route_id: str | None = None
+    departure_time: datetime | None = None
+
 
 class TripResponse(BaseModel):
     id: str
@@ -79,8 +89,8 @@ class TripResponse(BaseModel):
     vehicle_id: str
     driver_id: str
     consignment_id: str
-    departure_time: Optional[datetime] = None
-    estimated_arrival_time: Optional[datetime] = None
+    departure_time: datetime | None = None
+    estimated_arrival_time: datetime | None = None
     status: str
     current_delay_min: float
     created_at: datetime
@@ -88,13 +98,15 @@ class TripResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class DeliveryProofCreate(BaseModel):
     lat: float
     lon: float
-    photo_url: Optional[str] = None
+    photo_url: str | None = None
     receiver_name: str
     receiver_designation: str = "Camp In-Charge"
-    digital_signature: Optional[str] = None
+    digital_signature: str | None = None
+
 
 class GeofenceCreate(BaseModel):
     name: str
@@ -102,4 +114,4 @@ class GeofenceCreate(BaseModel):
     center_lat: float
     center_lon: float
     radius_meters: float = 1000.0
-    polygon_geojson: Optional[str] = None
+    polygon_geojson: str | None = None

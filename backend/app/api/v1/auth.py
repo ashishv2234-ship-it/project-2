@@ -1,14 +1,25 @@
-from datetime import timedelta
 from typing import Any
+
+from app.core.database import get_db
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    verify_password,
+)
+from app.models.user import User
+from app.schemas.auth import (
+    LoginRequest,
+    OTPRequest,
+    OTPVerify,
+    Token,
+    TokenRefreshRequest,
+)
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.core.config import settings
-from app.core.security import verify_password, create_access_token, create_refresh_token, decode_token
-from app.models.user import User
-from app.schemas.auth import LoginRequest, Token, TokenRefreshRequest, OTPRequest, OTPVerify
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
 
 @router.post("/login", response_model=Token)
 def login(payload: LoginRequest, db: Session = Depends(get_db)) -> Any:
@@ -21,11 +32,18 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> Any:
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive"
+        )
 
     access_token = create_access_token(
         subject=user.id,
-        claims={"role": user.role, "email": user.email, "district": user.district, "state": user.state}
+        claims={
+            "role": user.role,
+            "email": user.email,
+            "district": user.district,
+            "state": user.state,
+        },
     )
     refresh_token = create_refresh_token(subject=user.id)
 
@@ -40,25 +58,31 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> Any:
             "role": user.role,
             "district": user.district,
             "state": user.state,
-            "language": user.language
-        }
+            "language": user.language,
+        },
     }
+
 
 @router.post("/refresh", response_model=Token)
 def refresh_token(payload: TokenRefreshRequest, db: Session = Depends(get_db)) -> Any:
     """Exchange valid refresh token for a new access token."""
     decoded = decode_token(payload.refresh_token)
     if decoded.get("type") != "refresh":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token type")
-    
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token type"
+        )
+
     user_id = decoded.get("sub")
     user = db.query(User).filter(User.id == user_id).first()
     if not user or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+        )
 
     new_access = create_access_token(
         subject=user.id,
-        claims={"role": user.role, "email": user.email, "district": user.district}
+        claims={"role": user.role, "email": user.email, "district": user.district},
     )
     new_refresh = create_refresh_token(subject=user.id)
 
@@ -71,14 +95,16 @@ def refresh_token(payload: TokenRefreshRequest, db: Session = Depends(get_db)) -
             "name": user.name,
             "email": user.email,
             "role": user.role,
-            "district": user.district
-        }
+            "district": user.district,
+        },
     }
+
 
 @router.post("/logout")
 def logout() -> Any:
     """Stateless JWT logout confirmation."""
     return {"message": "Session invalidated successfully."}
+
 
 @router.post("/otp/request")
 def request_otp(payload: OTPRequest) -> Any:
@@ -86,8 +112,9 @@ def request_otp(payload: OTPRequest) -> Any:
     return {
         "message": f"Tactical 6-digit OTP dispatched via SMS gateway to {payload.phone}",
         "otp_expiry_seconds": 300,
-        "demo_hint_otp": "704820"
+        "demo_hint_otp": "704820",
     }
+
 
 @router.post("/otp/verify")
 def verify_otp(payload: OTPVerify, db: Session = Depends(get_db)) -> Any:
@@ -99,8 +126,7 @@ def verify_otp(payload: OTPVerify, db: Session = Depends(get_db)) -> Any:
             user = db.query(User).filter(User.role == "Field Officer").first()
 
         access_token = create_access_token(
-            subject=user.id,
-            claims={"role": user.role, "phone": user.phone}
+            subject=user.id, claims={"role": user.role, "phone": user.phone}
         )
         return {
             "access_token": access_token,
@@ -109,7 +135,9 @@ def verify_otp(payload: OTPVerify, db: Session = Depends(get_db)) -> Any:
                 "id": user.id,
                 "name": user.name,
                 "role": user.role,
-                "district": user.district
-            }
+                "district": user.district,
+            },
         }
-    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OTP code")
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OTP code"
+    )

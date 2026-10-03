@@ -1,22 +1,36 @@
-from typing import List, Any, Optional
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from app.core.database import get_db
+from datetime import UTC, datetime
+from typing import Any
+
 from app.core.audit import record_audit_log
-from app.models.transport import Road, RoadSegment, Bridge, District, State, RoadStatusEvent
-from app.schemas.network import (
-    RoadResponse, RoadSegmentResponse, BridgeResponse, 
-    RoadStatusEventCreate, DistrictConnectivityResponse, DistrictInfoResponse, AccessibilitySummaryResponse
+from app.core.database import get_db
+from app.models.transport import (
+    Bridge,
+    District,
+    Road,
+    RoadSegment,
+    RoadStatusEvent,
+    State,
 )
+from app.schemas.network import (
+    AccessibilitySummaryResponse,
+    BridgeResponse,
+    DistrictConnectivityResponse,
+    DistrictInfoResponse,
+    RoadResponse,
+    RoadSegmentResponse,
+    RoadStatusEventCreate,
+)
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/network", tags=["Transport Network & Accessibility"])
 
-@router.get("/roads", response_model=List[RoadResponse])
+
+@router.get("/roads", response_model=list[RoadResponse])
 def get_all_roads(
-    status_filter: Optional[str] = None,
-    type_filter: Optional[str] = None,
-    db: Session = Depends(get_db)
+    status_filter: str | None = None,
+    type_filter: str | None = None,
+    db: Session = Depends(get_db),
 ) -> Any:
     """Retrieve all monitored National, State, and BRO border highways."""
     query = db.query(Road)
@@ -26,6 +40,7 @@ def get_all_roads(
         query = query.filter(Road.type == type_filter.upper())
     return query.all()
 
+
 @router.get("/roads/{id}", response_model=RoadResponse)
 def get_road_by_id(id: str, db: Session = Depends(get_db)) -> Any:
     """Retrieve detailed highway metadata."""
@@ -34,12 +49,13 @@ def get_road_by_id(id: str, db: Session = Depends(get_db)) -> Any:
         raise HTTPException(status_code=404, detail="Road corridor not found")
     return road
 
-@router.get("/segments", response_model=List[RoadSegmentResponse])
+
+@router.get("/segments", response_model=list[RoadSegmentResponse])
 def get_road_segments(
-    road_id: Optional[str] = None,
-    district_id: Optional[str] = None,
-    status_filter: Optional[str] = None,
-    db: Session = Depends(get_db)
+    road_id: str | None = None,
+    district_id: str | None = None,
+    status_filter: str | None = None,
+    db: Session = Depends(get_db),
 ) -> Any:
     """Retrieve road segments with terrain, slope, and elevation attributes."""
     query = db.query(RoadSegment)
@@ -51,13 +67,14 @@ def get_road_segments(
         query = query.filter(RoadSegment.current_status == status_filter.upper())
     return query.all()
 
+
 @router.get("/segments/{id}/status")
 def get_segment_status(id: str, db: Session = Depends(get_db)) -> Any:
     """Get live status, recent events, and expected delay for a specific segment."""
     segment = db.query(RoadSegment).filter(RoadSegment.id == id).first()
     if not segment:
         raise HTTPException(status_code=404, detail="Road segment not found")
-    
+
     recent_events = (
         db.query(RoadStatusEvent)
         .filter(RoadStatusEvent.segment_id == id)
@@ -82,21 +99,23 @@ def get_segment_status(id: str, db: Session = Depends(get_db)) -> Any:
                 "source": e.source,
                 "confidence": e.confidence,
                 "reason": e.reason,
-                "timestamp": e.start_time.isoformat()
-            } for e in recent_events
-        ]
+                "timestamp": e.start_time.isoformat(),
+            }
+            for e in recent_events
+        ],
     }
 
-@router.get("/bridges", response_model=List[BridgeResponse])
+
+@router.get("/bridges", response_model=list[BridgeResponse])
 def get_all_bridges(
-    status_filter: Optional[str] = None,
-    db: Session = Depends(get_db)
+    status_filter: str | None = None, db: Session = Depends(get_db)
 ) -> Any:
     """List major bridges, aqueducts, and load limits."""
     query = db.query(Bridge)
     if status_filter:
         query = query.filter(Bridge.status == status_filter.upper())
     return query.all()
+
 
 DISTRICT_DIAGNOSTICS = {
     "Dima Hasao (Haflong)": {
@@ -108,7 +127,7 @@ DISTRICT_DIAGNOSTICS = {
         "chokepoint_lon": 92.9976,
         "operational_impact": "Heavy freight & cryo-oxygen supply to Barak Valley halted. Haflong Civil Hospital & 2 sub-divisional hospitals facing critical supply depletion (<48h). Lumding-Badarpur railway section track foundation washed out.",
         "restoration_eta": "Est. Clearance: 14.0 hours (3 PWD heavy hydraulic excavators & BRO 119 RCC deployed)",
-        "recommended_contingency": "Reroute essential medical/perishable light cargo (<16 MT) via SH-4 Umrangso-Lanka tactical bypass with BRO escort."
+        "recommended_contingency": "Reroute essential medical/perishable light cargo (<16 MT) via SH-4 Umrangso-Lanka tactical bypass with BRO escort.",
     },
     "Champhai (Indo-Myanmar)": {
         "problem_type": "MUDFLOW & SUBSIDENCE",
@@ -119,7 +138,7 @@ DISTRICT_DIAGNOSTICS = {
         "chokepoint_lon": 93.328,
         "operational_impact": "District severed from Aizawl central distribution depot. Petroleum (POL) reserves at 24% capacity. Essential baby food & dialysis fluids stockout risk within 36 hours.",
         "restoration_eta": "Est. Clearance: 28.0 hours (Requires earth filling, retaining wall shoring, and temporary Bailey decking)",
-        "recommended_contingency": "Helicopter emergency air-drop protocol activated by State Disaster Management Authority for critical medicine batches."
+        "recommended_contingency": "Helicopter emergency air-drop protocol activated by State Disaster Management Authority for critical medicine batches.",
     },
     "Kalimpong / Sevoke Pass": {
         "problem_type": "RIVER_OVERFLOW",
@@ -130,7 +149,7 @@ DISTRICT_DIAGNOSTICS = {
         "chokepoint_lon": 88.473,
         "operational_impact": "Commercial trucks barred from transit to prevent bridge structural destabilization. Only 4x4 emergency rescue vehicles permitted during daylight hours.",
         "restoration_eta": "Est. Clearance: 10.0 hours (Contingent on upstream barrage discharge stabilization)",
-        "recommended_contingency": "Divert light supply traffic via Lava-Algarah-Gorubathan tactical mountain circuit."
+        "recommended_contingency": "Divert light supply traffic via Lava-Algarah-Gorubathan tactical mountain circuit.",
     },
     "Imphal West": {
         "problem_type": "HILL_SLIP_AND_SECURITY",
@@ -141,7 +160,7 @@ DISTRICT_DIAGNOSTICS = {
         "chokepoint_lon": 93.936,
         "operational_impact": "Convoys subject to mandatory security muster points and timed escort batches (06:00, 11:00, 15:00 IST). Average transit delay +65 mins.",
         "restoration_eta": "Active Operation: Single-lane open with Assam Rifles convoy escorts.",
-        "recommended_contingency": "Ensure consignments join registered Armed Escort Convoy waves with NavIC transponders active."
+        "recommended_contingency": "Ensure consignments join registered Armed Escort Convoy waves with NavIC transponders active.",
     },
     "Kohima": {
         "problem_type": "ROAD_SUBSIDENCE",
@@ -152,7 +171,7 @@ DISTRICT_DIAGNOSTICS = {
         "chokepoint_lon": 94.110,
         "operational_impact": "Multi-axle heavy trailers (>30 MT) staged to avoid structural strain. Average consignment transit delay +35 mins.",
         "restoration_eta": "Est. Clearance: 8.0 hours for stone-pitching reinforcement and cold-mix asphalt overlay.",
-        "recommended_contingency": "Alternate passage via Niuland-Kohima bypass authorized for light utility vehicles and ambulances."
+        "recommended_contingency": "Alternate passage via Niuland-Kohima bypass authorized for light utility vehicles and ambulances.",
     },
     "East Khasi Hills (Shillong)": {
         "problem_type": "FLASH_FLOOD_DRAINAGE",
@@ -163,7 +182,7 @@ DISTRICT_DIAGNOSTICS = {
         "chokepoint_lon": 92.368,
         "operational_impact": "Moderate freight deceleration. All heavy vehicles cleared to transit with 50m minimum headway spacing and 15 km/h speed cap.",
         "restoration_eta": "Active Clearing: State PWD high-volume submersible pumps active; portal water level receding.",
-        "recommended_contingency": "Maintain single-file convoy formation with fog lamps active inside tunnel corridor."
+        "recommended_contingency": "Maintain single-file convoy formation with fog lamps active inside tunnel corridor.",
     },
     "Cachar (Silchar)": {
         "problem_type": "RIVER_SURGE",
@@ -174,7 +193,7 @@ DISTRICT_DIAGNOSTICS = {
         "chokepoint_lon": 92.779,
         "operational_impact": "Inter-district delivery turnaround delayed +50 mins. Upstream Dima Hasao block creates secondary buffer stock reliance.",
         "restoration_eta": "Under Observation: River level plateauing below red line; no structural compromise.",
-        "recommended_contingency": "Use northern Kumbhirgram Airport Ring Road for cross-valley delivery access."
+        "recommended_contingency": "Use northern Kumbhirgram Airport Ring Road for cross-valley delivery access.",
     },
     "Papum Pare (Itanagar)": {
         "problem_type": "LOOSE_GRAVEL",
@@ -185,7 +204,7 @@ DISTRICT_DIAGNOSTICS = {
         "chokepoint_lon": 93.621,
         "operational_impact": "Normal supply chain flow. Caution signage posted; all priority consignments arriving on schedule.",
         "restoration_eta": "Fully Operational: BRO road rangers conducting rolling sweeps.",
-        "recommended_contingency": "Primary Trans-Arunachal Highway (NH-13) fully open."
+        "recommended_contingency": "Primary Trans-Arunachal Highway (NH-13) fully open.",
     },
     "Kamrup Metro (Guwahati)": {
         "problem_type": "NORMAL",
@@ -196,15 +215,16 @@ DISTRICT_DIAGNOSTICS = {
         "chokepoint_lon": 91.736,
         "operational_impact": "All arterial expressways clear. Central staging depot dispatching relief buffers to upper districts.",
         "restoration_eta": "Fully Operational (100% throughput).",
-        "recommended_contingency": "All arterial National Highway corridors (NH-27, NH-17) open for 24/7 heavy freight movement."
-    }
+        "recommended_contingency": "All arterial National Highway corridors (NH-27, NH-17) open for 24/7 heavy freight movement.",
+    },
 }
 
-@router.get("/districts", response_model=List[DistrictInfoResponse])
+
+@router.get("/districts", response_model=list[DistrictInfoResponse])
 def get_all_districts(
-    state_code: Optional[str] = None,
-    status_filter: Optional[str] = None,
-    db: Session = Depends(get_db)
+    state_code: str | None = None,
+    status_filter: str | None = None,
+    db: Session = Depends(get_db),
 ) -> Any:
     """List all NER districts with real-time connectivity, problem descriptions, and chokepoint locations."""
     query = db.query(District).join(State, District.state_id == State.id)
@@ -212,50 +232,56 @@ def get_all_districts(
         query = query.filter(State.code == state_code.upper())
     if status_filter and status_filter.upper() != "ALL":
         query = query.filter(District.connectivity_status == status_filter.upper())
-    
+
     districts = query.order_by(District.isolation_index.desc()).all()
-    
+
     results = []
     for d in districts:
-        diag = DISTRICT_DIAGNOSTICS.get(d.name, {
-            "problem_type": "NORMAL" if d.isolation_index < 0.3 else "RESTRICTED",
-            "problem_summary": f"Corridor Status: {d.connectivity_status}",
-            "problem_description": "Routine monsoon watch active. Highway patrols monitoring slope stability.",
-            "chokepoint_location": f"{d.name} Arterial Link",
-            "chokepoint_lat": d.center_lat,
-            "chokepoint_lon": d.center_lon,
-            "operational_impact": "Supplies moving with normal seasonal clearance times.",
-            "restoration_eta": "Operational",
-            "recommended_contingency": "Primary highway operational."
-        })
-        
+        diag = DISTRICT_DIAGNOSTICS.get(
+            d.name,
+            {
+                "problem_type": "NORMAL" if d.isolation_index < 0.3 else "RESTRICTED",
+                "problem_summary": f"Corridor Status: {d.connectivity_status}",
+                "problem_description": "Routine monsoon watch active. Highway patrols monitoring slope stability.",
+                "chokepoint_location": f"{d.name} Arterial Link",
+                "chokepoint_lat": d.center_lat,
+                "chokepoint_lon": d.center_lon,
+                "operational_impact": "Supplies moving with normal seasonal clearance times.",
+                "restoration_eta": "Operational",
+                "recommended_contingency": "Primary highway operational.",
+            },
+        )
+
         # Calculate facilities
         hospitals = max(2, int(d.critical_facilities_count * 0.6))
         camps = max(1, d.critical_facilities_count - hospitals)
 
-        results.append({
-            "id": d.id,
-            "name": d.name,
-            "state_code": d.state.code if d.state else "NER",
-            "state_name": d.state.name if d.state else "North East",
-            "isolation_index": d.isolation_index,
-            "connectivity_status": d.connectivity_status,
-            "critical_facilities_count": d.critical_facilities_count,
-            "hospitals_count": hospitals,
-            "relief_camps_count": camps,
-            "center_lat": d.center_lat,
-            "center_lon": d.center_lon,
-            "problem_type": diag["problem_type"],
-            "problem_summary": diag["problem_summary"],
-            "problem_description": diag["problem_description"],
-            "chokepoint_location": diag["chokepoint_location"],
-            "chokepoint_lat": diag.get("chokepoint_lat") or d.center_lat,
-            "chokepoint_lon": diag.get("chokepoint_lon") or d.center_lon,
-            "operational_impact": diag["operational_impact"],
-            "restoration_eta": diag["restoration_eta"],
-            "recommended_contingency": diag["recommended_contingency"]
-        })
+        results.append(
+            {
+                "id": d.id,
+                "name": d.name,
+                "state_code": d.state.code if d.state else "NER",
+                "state_name": d.state.name if d.state else "North East",
+                "isolation_index": d.isolation_index,
+                "connectivity_status": d.connectivity_status,
+                "critical_facilities_count": d.critical_facilities_count,
+                "hospitals_count": hospitals,
+                "relief_camps_count": camps,
+                "center_lat": d.center_lat,
+                "center_lon": d.center_lon,
+                "problem_type": diag["problem_type"],
+                "problem_summary": diag["problem_summary"],
+                "problem_description": diag["problem_description"],
+                "chokepoint_location": diag["chokepoint_location"],
+                "chokepoint_lat": diag.get("chokepoint_lat") or d.center_lat,
+                "chokepoint_lon": diag.get("chokepoint_lon") or d.center_lon,
+                "operational_impact": diag["operational_impact"],
+                "restoration_eta": diag["restoration_eta"],
+                "recommended_contingency": diag["recommended_contingency"],
+            }
+        )
     return results
+
 
 @router.get("/districts/{id}/connectivity", response_model=DistrictConnectivityResponse)
 def get_district_connectivity(id: str, db: Session = Depends(get_db)) -> Any:
@@ -263,11 +289,13 @@ def get_district_connectivity(id: str, db: Session = Depends(get_db)) -> Any:
     district = db.query(District).filter(District.id == id).first()
     if not district:
         raise HTTPException(status_code=404, detail="District not found")
-    
+
     # Calculate open and blocked segments touching this district
     segments = db.query(RoadSegment).filter(RoadSegment.district_id == id).all()
     open_count = sum(1 for s in segments if s.current_status == "OPEN")
-    blocked_count = sum(1 for s in segments if s.current_status in ("BLOCKED", "HIGH_RISK"))
+    blocked_count = sum(
+        1 for s in segments if s.current_status in ("BLOCKED", "HIGH_RISK")
+    )
 
     return {
         "district_id": district.id,
@@ -277,19 +305,24 @@ def get_district_connectivity(id: str, db: Session = Depends(get_db)) -> Any:
         "critical_facilities_count": district.critical_facilities_count,
         "open_routes_count": open_count,
         "blocked_routes_count": blocked_count,
-        "nearest_accessible_depot": "Guwahati Central Logistics Depot" if district.isolation_index < 0.5 else "Lumding Army Cantonment Staging Hub"
+        "nearest_accessible_depot": "Guwahati Central Logistics Depot"
+        if district.isolation_index < 0.5
+        else "Lumding Army Cantonment Staging Hub",
     }
 
+
 @router.post("/status-events")
-def post_road_status_event(payload: RoadStatusEventCreate, db: Session = Depends(get_db)) -> Any:
+def post_road_status_event(
+    payload: RoadStatusEventCreate, db: Session = Depends(get_db)
+) -> Any:
     """Submit a verified road status change (e.g. Landslide Clearance or Closure)."""
     segment = db.query(RoadSegment).filter(RoadSegment.id == payload.segment_id).first()
     if not segment:
         raise HTTPException(status_code=404, detail="Road segment not found")
-    
+
     old_status = segment.current_status
     segment.current_status = payload.status
-    segment.updated_at = datetime.now(timezone.utc)
+    segment.updated_at = datetime.now(UTC)
 
     event = RoadStatusEvent(
         segment_id=payload.segment_id,
@@ -297,7 +330,7 @@ def post_road_status_event(payload: RoadStatusEventCreate, db: Session = Depends
         source=payload.source,
         confidence=payload.confidence,
         reason=payload.reason,
-        start_time=datetime.now(timezone.utc)
+        start_time=datetime.now(UTC),
     )
     db.add(event)
     db.commit()
@@ -309,9 +342,13 @@ def post_road_status_event(payload: RoadStatusEventCreate, db: Session = Depends
         entity_type="road_segment",
         entity_id=segment.id,
         old_value=old_status,
-        new_value=payload.status
+        new_value=payload.status,
     )
-    return {"message": f"Segment {segment.id} transitioned to {payload.status}", "event_id": event.id}
+    return {
+        "message": f"Segment {segment.id} transitioned to {payload.status}",
+        "event_id": event.id,
+    }
+
 
 @router.get("/accessibility-summary", response_model=AccessibilitySummaryResponse)
 def get_accessibility_summary(db: Session = Depends(get_db)) -> Any:
@@ -321,8 +358,12 @@ def get_accessibility_summary(db: Session = Depends(get_db)) -> Any:
     open_km = sum(s.length_km for s in segments if s.current_status == "OPEN")
     op_pct = round((open_km / total_km * 100.0) if total_km > 0 else 74.2, 1)
 
-    blocked_count = db.query(RoadSegment).filter(RoadSegment.current_status == "BLOCKED").count()
-    cutoff_districts = db.query(District).filter(District.isolation_index >= 0.65).count()
+    blocked_count = (
+        db.query(RoadSegment).filter(RoadSegment.current_status == "BLOCKED").count()
+    )
+    cutoff_districts = (
+        db.query(District).filter(District.isolation_index >= 0.65).count()
+    )
 
     return {
         "total_network_km": round(total_km if total_km > 0 else 14820.0, 1),
@@ -330,5 +371,5 @@ def get_accessibility_summary(db: Session = Depends(get_db)) -> Any:
         "active_blockades_count": max(blocked_count, 9),
         "cutoff_districts_count": max(cutoff_districts, 4),
         "convoys_in_transit_count": 28,
-        "last_updated": datetime.now(timezone.utc)
+        "last_updated": datetime.now(UTC),
     }

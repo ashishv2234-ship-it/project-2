@@ -1,6 +1,8 @@
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Any
+
 from pydantic import BaseModel
+
 
 class WeatherCurrentResponse(BaseModel):
     station_name: str
@@ -14,22 +16,25 @@ class WeatherCurrentResponse(BaseModel):
     warning_level: str
     source: str
 
+
 class WeatherForecastResponse(BaseModel):
     lat: float
     lon: float
     forecast_time: datetime
     rainfall_predicted_mm: float
     warning_level: str
-    bulletin_text: Optional[str] = None
+    bulletin_text: str | None = None
     source: str
 
+
 class WarningResponse(BaseModel):
-    district_id: Optional[str] = None
+    district_id: str | None = None
     district_name: str
-    warning_level: str # GREEN, YELLOW, ORANGE, RED
+    warning_level: str  # GREEN, YELLOW, ORANGE, RED
     bulletin: str
     effective_until: datetime
     issued_at: datetime
+
 
 class SegmentRiskResponse(BaseModel):
     segment_id: str
@@ -41,7 +46,8 @@ class SegmentRiskResponse(BaseModel):
     valid_to: datetime
     model_version: str
     confidence: float
-    contributing_factors: Optional[Dict[str, Any]] = None
+    contributing_factors: dict[str, Any] | None = None
+
 
 class DistrictRiskSummaryResponse(BaseModel):
     district_id: str
@@ -52,6 +58,7 @@ class DistrictRiskSummaryResponse(BaseModel):
     highest_risk_road: str
     imd_warning_level: str
 
+
 class RiskRecomputeRequest(BaseModel):
-    district_id: Optional[str] = None
+    district_id: str | None = None
     force_all: bool = False

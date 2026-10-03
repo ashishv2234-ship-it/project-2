@@ -1,6 +1,7 @@
 import hashlib
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 
 class AlertClassificationService:
     """
@@ -13,9 +14,11 @@ class AlertClassificationService:
 
     def __init__(self):
         # Cache for recent alerts to detect duplicates within 30-minute window
-        self._recent_alert_hashes: Dict[str, datetime] = {}
+        self._recent_alert_hashes: dict[str, datetime] = {}
 
-    def generate_dedup_hash(self, alert_type: str, district: str, road_code: Optional[str] = None) -> str:
+    def generate_dedup_hash(
+        self, alert_type: str, district: str, road_code: str | None = None
+    ) -> str:
         key = f"{alert_type.upper()}:{district.lower()}:{str(road_code).lower()}"
         return hashlib.md5(key.encode("utf-8")).hexdigest()
 
@@ -24,14 +27,14 @@ class AlertClassificationService:
         alert_type: str,
         base_severity: str,
         district_name: str,
-        road_code: Optional[str] = None,
-        commodity_type: Optional[str] = None,
-        affected_population_est: int = 5000
-    ) -> Dict[str, Any]:
+        road_code: str | None = None,
+        commodity_type: str | None = None,
+        affected_population_est: int = 5000,
+    ) -> dict[str, Any]:
         """
         Calculates priority score and checks for duplicate suppression.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         dedup_hash = self.generate_dedup_hash(alert_type, district_name, road_code)
 
         # Check deduplication window (30 mins)
@@ -46,7 +49,7 @@ class AlertClassificationService:
 
         # Strategic Corridors in NER
         strategic_corridors = {"NH-27", "NH-6", "NH-102", "NH-13", "NH-10", "NH-29"}
-        is_strategic = (road_code and road_code.upper() in strategic_corridors)
+        is_strategic = road_code and road_code.upper() in strategic_corridors
 
         # Commodity weight
         commodity_weights = {
@@ -54,17 +57,12 @@ class AlertClassificationService:
             "CRYO_VACCINES": 30,
             "DISASTER_RELIEF": 25,
             "POL_FUEL": 20,
-            "FOODGRAINS_FCI": 15
+            "FOODGRAINS_FCI": 15,
         }
         comm_score = commodity_weights.get(str(commodity_type).upper(), 5)
 
         # Severity score
-        severity_scores = {
-            "CRITICAL": 50,
-            "HIGH": 30,
-            "MODERATE": 15,
-            "LOW": 5
-        }
+        severity_scores = {"CRITICAL": 50, "HIGH": 30, "MODERATE": 15, "LOW": 5}
         sev_score = severity_scores.get(base_severity.upper(), 20)
 
         # Strategic corridor boost
@@ -72,7 +70,7 @@ class AlertClassificationService:
 
         # Total priority score [0 to 100+]
         total_priority = sev_score + comm_score + corridor_score
-        
+
         if total_priority >= 80:
             final_priority = "DEFCON_1_CRITICAL"
         elif total_priority >= 55:
@@ -88,7 +86,9 @@ class AlertClassificationService:
             "calculated_priority": final_priority,
             "priority_score": total_priority,
             "is_strategic_corridor": is_strategic,
-            "broadcast_channels": ["WEBSOCKET", "PUSH"] + (["SMS"] if final_priority in ("HIGH", "DEFCON_1_CRITICAL") else [])
+            "broadcast_channels": ["WEBSOCKET", "PUSH"]
+            + (["SMS"] if final_priority in ("HIGH", "DEFCON_1_CRITICAL") else []),
         }
+
 
 alert_classifier = AlertClassificationService()

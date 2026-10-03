@@ -1,6 +1,8 @@
 import json
-from typing import Dict, List, Set, Any
-from fastapi import WebSocket, WebSocketDisconnect
+from typing import Any
+
+from fastapi import WebSocket
+
 
 class WebSocketManager:
     """
@@ -9,7 +11,7 @@ class WebSocketManager:
     """
 
     def __init__(self):
-        self.active_connections: Dict[WebSocket, Set[str]] = {}
+        self.active_connections: dict[WebSocket, set[str]] = {}
 
     async def connect(self, websocket: WebSocket, channel: str = "all"):
         await websocket.accept()
@@ -25,7 +27,7 @@ class WebSocketManager:
         if websocket in self.active_connections:
             self.active_connections[websocket].add(channel)
 
-    async def broadcast(self, message: Dict[str, Any], channel: str = "all"):
+    async def broadcast(self, message: dict[str, Any], channel: str = "all"):
         """Broadcast message to all subscribers of the channel or 'all'."""
         data_str = json.dumps(message)
         disconnected = []
@@ -33,10 +35,11 @@ class WebSocketManager:
             if "all" in channels or channel in channels:
                 try:
                     await ws.send_text(data_str)
-                except Exception:
+                except Exception:  # noqa: BLE001
                     disconnected.append(ws)
-        
+
         for ws in disconnected:
             self.disconnect(ws)
+
 
 ws_manager = WebSocketManager()

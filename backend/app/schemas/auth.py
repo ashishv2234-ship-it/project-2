@@ -1,9 +1,10 @@
-from typing import Optional
 from pydantic import BaseModel, EmailStr
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
 
 class Token(BaseModel):
     access_token: str
@@ -11,11 +12,14 @@ class Token(BaseModel):
     token_type: str = "bearer"
     user: dict
 
+
 class TokenRefreshRequest(BaseModel):
     refresh_token: str
 
+
 class OTPRequest(BaseModel):
     phone: str
+
 
 class OTPVerify(BaseModel):
     phone: str

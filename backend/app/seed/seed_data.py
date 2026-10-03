@@ -1,19 +1,28 @@
 import json
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.orm import Session
-from app.core.database import SessionLocal, engine, Base
+from datetime import UTC, datetime, timedelta
+
+from app.core.database import Base, SessionLocal, engine
 from app.core.security import hash_password
-from app.models.user import User, AuditLog
+from app.models.alerts import Alert, EmergencyEvent
+from app.models.incidents import FieldReport, Incident
 from app.models.transport import (
-    State, District, Road, RoadSegment, Bridge, InfrastructureNode, RoadStatusEvent
+    Bridge,
+    District,
+    InfrastructureNode,
+    Road,
+    RoadSegment,
+    State,
 )
-from app.models.weather import (
-    WeatherObservation, WeatherForecast, FloodRiskZone, LandslideRiskZone, RiskScore
+from app.models.user import User
+from app.models.vehicles import (
+    Consignment,
+    Driver,
+    GPSReading,
+    Trip,
+    Vehicle,
 )
-from app.models.incidents import Incident, FieldReport, MediaAsset, VerificationTask
-from app.models.vehicles import Vehicle, Driver, GPSReading, Consignment, Trip, DeliveryProof, Geofence
-from app.models.routing import RouteRequest, RouteOption
-from app.models.alerts import Alert, AlertSubscription, Notification, EmergencyEvent
+from sqlalchemy.orm import Session
+
 
 def seed_database(db: Session = None):
     # Ensure tables exist
@@ -31,7 +40,7 @@ def seed_database(db: Session = None):
             return
 
         print("[SEED] Initializing NER-LogiSense seed database...")
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # 1. Users & Roles
         users_data = [
@@ -42,7 +51,7 @@ def seed_database(db: Session = None):
                 "role": "Super Admin",
                 "district": "Kamrup Metro (Guwahati)",
                 "state": "Assam",
-                "language": "en"
+                "language": "en",
             },
             {
                 "name": "Dr. P. Barua",
@@ -51,7 +60,7 @@ def seed_database(db: Session = None):
                 "role": "State Admin",
                 "district": "Kamrup Metro (Guwahati)",
                 "state": "Assam",
-                "language": "as"
+                "language": "as",
             },
             {
                 "name": "T. Jamir, IAS",
@@ -60,7 +69,7 @@ def seed_database(db: Session = None):
                 "role": "District Officer",
                 "district": "Dima Hasao (Haflong)",
                 "state": "Assam",
-                "language": "en"
+                "language": "en",
             },
             {
                 "name": "S. Khongwir",
@@ -69,7 +78,7 @@ def seed_database(db: Session = None):
                 "role": "Dispatcher",
                 "district": "Kamrup Metro (Guwahati)",
                 "state": "Assam",
-                "language": "kha"
+                "language": "kha",
             },
             {
                 "name": "R. Debbarma",
@@ -78,7 +87,7 @@ def seed_database(db: Session = None):
                 "role": "Field Officer",
                 "district": "Dima Hasao (Haflong)",
                 "state": "Assam",
-                "language": "en"
+                "language": "en",
             },
             {
                 "name": "B. Mech",
@@ -87,8 +96,8 @@ def seed_database(db: Session = None):
                 "role": "Driver",
                 "district": "Kamrup Metro (Guwahati)",
                 "state": "Assam",
-                "language": "as"
-            }
+                "language": "as",
+            },
         ]
 
         user_instances = {}
@@ -103,7 +112,7 @@ def seed_database(db: Session = None):
                 state=u["state"],
                 language=u["language"],
                 status="ACTIVE",
-                created_at=now
+                created_at=now,
             )
             db.add(user)
             db.flush()
@@ -118,7 +127,7 @@ def seed_database(db: Session = None):
             ("Manipur", "MN", "Imphal"),
             ("Mizoram", "MZ", "Aizawl"),
             ("Tripura", "TR", "Agartala"),
-            ("Sikkim", "SK", "Gangtok")
+            ("Sikkim", "SK", "Gangtok"),
         ]
         state_instances = {}
         for sname, scode, scapital in states_data:
@@ -137,7 +146,7 @@ def seed_database(db: Session = None):
             ("Papum Pare (Itanagar)", "AR", 0.35, "CONNECTED", 27.102, 93.621),
             ("Kohima", "NL", 0.40, "RESTRICTED", 25.674, 94.110),
             ("Imphal West", "MN", 0.48, "RESTRICTED", 24.817, 93.936),
-            ("Kalimpong / Sevoke Pass", "SK", 0.65, "RESTRICTED", 27.066, 88.473)
+            ("Kalimpong / Sevoke Pass", "SK", 0.65, "RESTRICTED", 27.066, 88.473),
         ]
         district_instances = {}
         for dname, scode, is_idx, status, lat, lon in districts_data:
@@ -147,7 +156,7 @@ def seed_database(db: Session = None):
                 isolation_index=is_idx,
                 connectivity_status=status,
                 center_lat=lat,
-                center_lon=lon
+                center_lon=lon,
             )
             db.add(dist)
             db.flush()
@@ -155,12 +164,60 @@ def seed_database(db: Session = None):
 
         # 4. Roads & Highways
         roads_data = [
-            ("National Highway 27 (East-West Strategic Corridor)", "NH-27", "NATIONAL_HIGHWAY", "ASPHALT", 4, "NHAI", "RESTRICTED"),
-            ("National Highway 6 (Shillong-Jowai-Badarpur)", "NH-6", "NATIONAL_HIGHWAY", "ASPHALT", 2, "NHAI", "RESTRICTED"),
-            ("National Highway 102 (Imphal-Moreh Strategic Corridor)", "NH-102", "NATIONAL_HIGHWAY", "ASPHALT", 2, "BRO", "HIGH_RISK"),
-            ("Trans-Arunachal Highway", "NH-13", "NATIONAL_HIGHWAY", "ASPHALT", 2, "BRO", "OPEN"),
-            ("National Highway 29 (Dimapur-Kohima Pass)", "NH-29", "NATIONAL_HIGHWAY", "ASPHALT", 2, "NHAI", "OPEN"),
-            ("SH-4 Umrangso Reservoir Tactical Link", "SH-4", "STATE_HIGHWAY", "CONCRETE", 2, "STATE_PWD", "RESTRICTED")
+            (
+                "National Highway 27 (East-West Strategic Corridor)",
+                "NH-27",
+                "NATIONAL_HIGHWAY",
+                "ASPHALT",
+                4,
+                "NHAI",
+                "RESTRICTED",
+            ),
+            (
+                "National Highway 6 (Shillong-Jowai-Badarpur)",
+                "NH-6",
+                "NATIONAL_HIGHWAY",
+                "ASPHALT",
+                2,
+                "NHAI",
+                "RESTRICTED",
+            ),
+            (
+                "National Highway 102 (Imphal-Moreh Strategic Corridor)",
+                "NH-102",
+                "NATIONAL_HIGHWAY",
+                "ASPHALT",
+                2,
+                "BRO",
+                "HIGH_RISK",
+            ),
+            (
+                "Trans-Arunachal Highway",
+                "NH-13",
+                "NATIONAL_HIGHWAY",
+                "ASPHALT",
+                2,
+                "BRO",
+                "OPEN",
+            ),
+            (
+                "National Highway 29 (Dimapur-Kohima Pass)",
+                "NH-29",
+                "NATIONAL_HIGHWAY",
+                "ASPHALT",
+                2,
+                "NHAI",
+                "OPEN",
+            ),
+            (
+                "SH-4 Umrangso Reservoir Tactical Link",
+                "SH-4",
+                "STATE_HIGHWAY",
+                "CONCRETE",
+                2,
+                "STATE_PWD",
+                "RESTRICTED",
+            ),
         ]
         road_instances = {}
         for rname, rcode, rtype, rsurf, rlanes, rowner, rstatus in roads_data:
@@ -171,7 +228,7 @@ def seed_database(db: Session = None):
                 surface=rsurf,
                 lanes=rlanes,
                 owner_department=rowner,
-                status=rstatus
+                status=rstatus,
             )
             db.add(road)
             db.flush()
@@ -198,7 +255,7 @@ def seed_database(db: Session = None):
             landslide_risk_score=0.88,
             current_status="BLOCKED",
             current_travel_time_min=55.0,
-            expected_delay_min=180.0
+            expected_delay_min=180.0,
         )
         db.add(seg1)
 
@@ -218,7 +275,7 @@ def seed_database(db: Session = None):
             landslide_risk_score=0.05,
             current_status="OPEN",
             current_travel_time_min=120.0,
-            expected_delay_min=0.0
+            expected_delay_min=0.0,
         )
         db.add(seg2)
 
@@ -238,18 +295,58 @@ def seed_database(db: Session = None):
             landslide_risk_score=0.74,
             current_status="RESTRICTED",
             current_travel_time_min=95.0,
-            expected_delay_min=60.0
+            expected_delay_min=60.0,
         )
         db.add(seg3)
         db.flush()
 
         # 6. Strategic Bridges
         bridges_data = [
-            ("Bhupen Hazarika Setu (Dhola-Sadiya)", nh27.id, 27.797, 95.666, 60.0, "OPERATIONAL", 98.0),
-            ("Bogibeel Rail-Road Bridge", nh27.id, 27.404, 94.922, 60.0, "OPERATIONAL", 99.0),
-            ("Saraighat Bridge (Brahmaputra)", nh27.id, 26.128, 91.681, 45.0, "OPERATIONAL", 94.0),
-            ("Barail Escarpment Bridge #4 (KM 141.8)", nh27.id, 25.188, 92.997, 40.0, "WEIGHT_RESTRICTED", 76.5),
-            ("Sonapur Tunnel Aqueduct & Viaduct", nh6.id, 25.105, 92.368, 35.0, "SUBMERGED", 62.0)
+            (
+                "Bhupen Hazarika Setu (Dhola-Sadiya)",
+                nh27.id,
+                27.797,
+                95.666,
+                60.0,
+                "OPERATIONAL",
+                98.0,
+            ),
+            (
+                "Bogibeel Rail-Road Bridge",
+                nh27.id,
+                27.404,
+                94.922,
+                60.0,
+                "OPERATIONAL",
+                99.0,
+            ),
+            (
+                "Saraighat Bridge (Brahmaputra)",
+                nh27.id,
+                26.128,
+                91.681,
+                45.0,
+                "OPERATIONAL",
+                94.0,
+            ),
+            (
+                "Barail Escarpment Bridge #4 (KM 141.8)",
+                nh27.id,
+                25.188,
+                92.997,
+                40.0,
+                "WEIGHT_RESTRICTED",
+                76.5,
+            ),
+            (
+                "Sonapur Tunnel Aqueduct & Viaduct",
+                nh6.id,
+                25.105,
+                92.368,
+                35.0,
+                "SUBMERGED",
+                62.0,
+            ),
         ]
         for bname, rid, lat, lon, cap, bstatus, health in bridges_data:
             bridge = Bridge(
@@ -260,17 +357,57 @@ def seed_database(db: Session = None):
                 load_capacity_mt=cap,
                 status=bstatus,
                 structural_health_index=health,
-                last_inspection_date=now - timedelta(days=12)
+                last_inspection_date=now - timedelta(days=12),
             )
             db.add(bridge)
 
         # 7. Infrastructure Nodes (Warehouses, Hospitals, Helipads, Camps)
         nodes_data = [
-            ("Guwahati Central Logistics Depot", "WAREHOUSE", district_instances["Kamrup Metro (Guwahati)"].id, 26.182, 91.758, "12,000 MT capacity", "+919864011111"),
-            ("Silchar Medical Relief Hub", "HOSPITAL", district_instances["Cachar (Silchar)"].id, 24.833, 92.779, "500 Critical Beds + Cryo Vault", "+919864022222"),
-            ("Haflong Relief Camp #1 (Highland)", "RELIEF_CAMP", dima_dist.id, 25.188, 92.997, "3,500 Displaced Persons", "+919864033333"),
-            ("Jatinga Emergency Helipad", "HELIPAD", dima_dist.id, 25.118, 93.038, "Dual Mi-17 V5 Landing Pads", "+919864044444"),
-            ("Lumding Army Cantonment Staging Hub", "CHECKPOINT", dima_dist.id, 25.750, 93.167, "Convoy Staging & Fuel Vault", "+919864055555")
+            (
+                "Guwahati Central Logistics Depot",
+                "WAREHOUSE",
+                district_instances["Kamrup Metro (Guwahati)"].id,
+                26.182,
+                91.758,
+                "12,000 MT capacity",
+                "+919864011111",
+            ),
+            (
+                "Silchar Medical Relief Hub",
+                "HOSPITAL",
+                district_instances["Cachar (Silchar)"].id,
+                24.833,
+                92.779,
+                "500 Critical Beds + Cryo Vault",
+                "+919864022222",
+            ),
+            (
+                "Haflong Relief Camp #1 (Highland)",
+                "RELIEF_CAMP",
+                dima_dist.id,
+                25.188,
+                92.997,
+                "3,500 Displaced Persons",
+                "+919864033333",
+            ),
+            (
+                "Jatinga Emergency Helipad",
+                "HELIPAD",
+                dima_dist.id,
+                25.118,
+                93.038,
+                "Dual Mi-17 V5 Landing Pads",
+                "+919864044444",
+            ),
+            (
+                "Lumding Army Cantonment Staging Hub",
+                "CHECKPOINT",
+                dima_dist.id,
+                25.750,
+                93.167,
+                "Convoy Staging & Fuel Vault",
+                "+919864055555",
+            ),
         ]
         for nname, ntype, did, lat, lon, cap, phone in nodes_data:
             node = InfrastructureNode(
@@ -281,7 +418,7 @@ def seed_database(db: Session = None):
                 lon=lon,
                 capacity_desc=cap,
                 contact_phone=phone,
-                is_operational=True
+                is_operational=True,
             )
             db.add(node)
 
@@ -291,7 +428,7 @@ def seed_database(db: Session = None):
             phone="+919864067890",
             license_number="AS-01-2018-009182",
             blood_group="B+",
-            status="ON_TRIP"
+            status="ON_TRIP",
         )
         db.add(driver1)
         db.flush()
@@ -307,8 +444,8 @@ def seed_database(db: Session = None):
             last_lon=93.167,
             last_speed_kmh=42.0,
             last_heading_deg=138.0,
-            cryo_temp_c=-22.4, # Safe cryogenic cold-chain
-            last_ping_time=now
+            cryo_temp_c=-22.4,  # Safe cryogenic cold-chain
+            last_ping_time=now,
         )
         v2 = Vehicle(
             registration_number="AS-01-EC-7104",
@@ -320,7 +457,7 @@ def seed_database(db: Session = None):
             last_lon=92.865,
             last_speed_kmh=48.0,
             last_heading_deg=112.0,
-            last_ping_time=now
+            last_ping_time=now,
         )
         v3 = Vehicle(
             registration_number="ML-05-AA-3120",
@@ -332,7 +469,7 @@ def seed_database(db: Session = None):
             last_lon=91.893,
             last_speed_kmh=35.0,
             last_heading_deg=90.0,
-            last_ping_time=now
+            last_ping_time=now,
         )
         db.add_all([v1, v2, v3])
         db.flush()
@@ -351,7 +488,7 @@ def seed_database(db: Session = None):
                 ignition_status=True,
                 engine_temp_c=86.5,
                 cryo_temp_c=-22.4 + (i * 0.1),
-                navic_satellite_count=9
+                navic_satellite_count=9,
             )
             db.add(gps)
 
@@ -369,7 +506,7 @@ def seed_database(db: Session = None):
             dest_lon=92.997,
             priority="GRADE_1_CRITICAL",
             temperature_requirement="-25C to -15C",
-            status="IN_TRANSIT"
+            status="IN_TRANSIT",
         )
         db.add(consignment)
         db.flush()
@@ -379,13 +516,19 @@ def seed_database(db: Session = None):
             vehicle_id=v1.id,
             driver_id=driver1.id,
             consignment_id=consignment.id,
-            planned_route_geojson=json.dumps([
-                [26.182, 91.758], [26.345, 92.684], [25.750, 93.167], [25.123, 93.042], [25.188, 92.997]
-            ]),
+            planned_route_geojson=json.dumps(
+                [
+                    [26.182, 91.758],
+                    [26.345, 92.684],
+                    [25.750, 93.167],
+                    [25.123, 93.042],
+                    [25.188, 92.997],
+                ]
+            ),
             departure_time=now - timedelta(hours=3),
             estimated_arrival_time=now + timedelta(hours=4, minutes=45),
             status="IN_TRANSIT",
-            current_delay_min=18.0
+            current_delay_min=18.0,
         )
         db.add(trip)
 
@@ -402,7 +545,7 @@ def seed_database(db: Session = None):
             status="VERIFIED",
             reported_by=user_instances["field.officer@ner.gov.in"].id,
             verified_by=user_instances["admin@ner-logisense.gov.in"].id,
-            estimated_clearance_hours=14.0
+            estimated_clearance_hours=14.0,
         )
         inc2 = Incident(
             type="flood",
@@ -416,7 +559,7 @@ def seed_database(db: Session = None):
             status="IN_CLEARANCE",
             reported_by=user_instances["field.officer@ner.gov.in"].id,
             verified_by=user_instances["state.admin@assam.gov.in"].id,
-            estimated_clearance_hours=6.0
+            estimated_clearance_hours=6.0,
         )
         db.add_all([inc1, inc2])
         db.flush()
@@ -432,11 +575,15 @@ def seed_database(db: Session = None):
             disruption_type="Landslide",
             severity="CRITICAL",
             description="Road completely blocked. Barail Escarpment Bridge #4 approach covered. Immediate PWD heavy excavation required.",
-            media_files_json=json.dumps(["https://images.unsplash.com/photo-1545641203-7d072a14e3b7?auto=format&fit=crop&w=800"]),
+            media_files_json=json.dumps(
+                [
+                    "https://images.unsplash.com/photo-1545641203-7d072a14e3b7?auto=format&fit=crop&w=800"
+                ]
+            ),
             offline_created_at=now - timedelta(minutes=45),
             synced_at=now - timedelta(minutes=40),
             sync_status="SYNCED",
-            device_id="RUGGED-FIELD-TAB-AS04"
+            device_id="RUGGED-FIELD-TAB-AS04",
         )
         db.add(fr1)
 
@@ -450,7 +597,7 @@ def seed_database(db: Session = None):
             message="CRITICAL: NH-27 KM 141.8 severed due to 80m landslide. Jatinga Bypass diversion activated for relief convoys.",
             status="ACTIVE",
             created_at=now - timedelta(hours=1),
-            expires_at=now + timedelta(hours=24)
+            expires_at=now + timedelta(hours=24),
         )
         alert2 = Alert(
             type="FLASH_FLOOD_SURGE",
@@ -461,7 +608,7 @@ def seed_database(db: Session = None):
             message="HIGH RISK: Sonapur Tunnel flash flood. Single lane shuttle transit with heavy vehicle restrictions.",
             status="ACTIVE",
             created_at=now - timedelta(hours=2),
-            expires_at=now + timedelta(hours=12)
+            expires_at=now + timedelta(hours=12),
         )
         db.add_all([alert1, alert2])
         db.flush()
@@ -472,18 +619,25 @@ def seed_database(db: Session = None):
             title="Active Monsoon Surge Protocol (Level-3)",
             type="MONSOON_SURGE",
             level="LEVEL_3",
-            affected_districts_json=json.dumps([
-                "Dima Hasao (Haflong)", "East Khasi Hills (Shillong)", "Cachar (Silchar)", "Champhai"
-            ]),
+            affected_districts_json=json.dumps(
+                [
+                    "Dima Hasao (Haflong)",
+                    "East Khasi Hills (Shillong)",
+                    "Cachar (Silchar)",
+                    "Champhai",
+                ]
+            ),
             activated_by=user_instances["admin@ner-logisense.gov.in"].id,
             start_time=now - timedelta(days=1),
             priority_corridors_json=json.dumps(["NH-27", "NH-6", "NH-102"]),
-            is_active=True
+            is_active=True,
         )
         db.add(em_event)
 
         db.commit()
-        print("[SEED] Successfully seeded NER-LogiSense with complete regional test environment!")
+        print(
+            "[SEED] Successfully seeded NER-LogiSense with complete regional test environment!"
+        )
 
     except Exception as e:
         db.rollback()
@@ -492,6 +646,7 @@ def seed_database(db: Session = None):
     finally:
         if close_after:
             db.close()
+
 
 if __name__ == "__main__":
     seed_database()

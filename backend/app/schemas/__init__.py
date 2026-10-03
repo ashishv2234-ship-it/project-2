@@ -1,36 +1,85 @@
-from app.schemas.auth import LoginRequest, Token, TokenRefreshRequest, OTPRequest, OTPVerify
-from app.schemas.user import UserCreate, UserUpdate, UserResponse, PreferencesUpdate
-from app.schemas.network import (
-    RoadResponse, RoadSegmentResponse, BridgeResponse, 
-    RoadStatusEventCreate, DistrictConnectivityResponse, DistrictInfoResponse, AccessibilitySummaryResponse
-)
-from app.schemas.weather import (
-    WeatherCurrentResponse, WeatherForecastResponse, WarningResponse, 
-    SegmentRiskResponse, DistrictRiskSummaryResponse, RiskRecomputeRequest
-)
-from app.schemas.routing import (
-    RoutePlanRequest, RouteOptionResponse, RoutePlanResult, 
-    RouteAssignRequest, RouteReoptimizeRequest, EmergencyCorridorResponse,
-    DriverRoutePlanRequest, DriverTurnStep, DriverSafetyChecklist, DriverSafeRouteResponse
-)
-from app.schemas.vehicles import (
-    VehicleCreate, VehicleResponse, GPSReadingCreate, GPSBatchIngestRequest,
-    ConsignmentCreate, ConsignmentResponse, TripCreate, TripResponse, 
-    DeliveryProofCreate, GeofenceCreate
-)
-from app.schemas.incidents import (
-    IncidentCreate, IncidentUpdate, IncidentVerifyRequest, IncidentResponse, 
-    FieldReportCreate, FieldReportResponse, MediaUploadResponse
-)
 from app.schemas.alerts import (
-    AlertCreate, AlertResponse, AlertNotifyRequest, NotificationResponse, 
-    NotificationPreferencesRequest, EmergencyEventCreate, EmergencyEventUpdate, EmergencyEventResponse
+    AlertCreate,
+    AlertNotifyRequest,
+    AlertResponse,
+    EmergencyEventCreate,
+    EmergencyEventResponse,
+    EmergencyEventUpdate,
+    NotificationPreferencesRequest,
+    NotificationResponse,
+)
+from app.schemas.auth import (
+    LoginRequest,
+    OTPRequest,
+    OTPVerify,
+    Token,
+    TokenRefreshRequest,
 )
 from app.schemas.dashboards import (
-    StateOverviewResponse, DistrictDetailResponse, LogisticsBottleneckItem, 
-    EmergencyOverviewResponse, VehicleMovementResponse, AnalyticsDeliveryPerformance, AnalyticsDisruptionTrends
+    AnalyticsDeliveryPerformance,
+    AnalyticsDisruptionTrends,
+    DistrictDetailResponse,
+    EmergencyOverviewResponse,
+    LogisticsBottleneckItem,
+    StateOverviewResponse,
+    VehicleMovementResponse,
+)
+from app.schemas.incidents import (
+    FieldReportCreate,
+    FieldReportResponse,
+    IncidentCreate,
+    IncidentResponse,
+    IncidentUpdate,
+    IncidentVerifyRequest,
+    MediaUploadResponse,
+)
+from app.schemas.network import (
+    AccessibilitySummaryResponse,
+    BridgeResponse,
+    DistrictConnectivityResponse,
+    DistrictInfoResponse,
+    RoadResponse,
+    RoadSegmentResponse,
+    RoadStatusEventCreate,
 )
 from app.schemas.offline_sync import (
-    SyncQueueItem, SyncBatchRequest, SyncBatchResponse, SyncItemResult, 
-    DeltaSyncRequest, DeltaSyncResponse
+    DeltaSyncRequest,
+    DeltaSyncResponse,
+    SyncBatchRequest,
+    SyncBatchResponse,
+    SyncItemResult,
+    SyncQueueItem,
+)
+from app.schemas.routing import (
+    DriverRoutePlanRequest,
+    DriverSafeRouteResponse,
+    DriverSafetyChecklist,
+    DriverTurnStep,
+    EmergencyCorridorResponse,
+    RouteAssignRequest,
+    RouteOptionResponse,
+    RoutePlanRequest,
+    RoutePlanResult,
+    RouteReoptimizeRequest,
+)
+from app.schemas.user import PreferencesUpdate, UserCreate, UserResponse, UserUpdate
+from app.schemas.vehicles import (
+    ConsignmentCreate,
+    ConsignmentResponse,
+    DeliveryProofCreate,
+    GeofenceCreate,
+    GPSBatchIngestRequest,
+    GPSReadingCreate,
+    TripCreate,
+    TripResponse,
+    VehicleCreate,
+    VehicleResponse,
+)
+from app.schemas.weather import (
+    DistrictRiskSummaryResponse,
+    RiskRecomputeRequest,
+    SegmentRiskResponse,
+    WarningResponse,
+    WeatherCurrentResponse,
+    WeatherForecastResponse,
 )

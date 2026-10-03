@@ -1,33 +1,38 @@
 from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel, EmailStr
+
 
 class UserBase(BaseModel):
     name: str
     phone: str
     email: EmailStr
     role: str
-    district: Optional[str] = None
-    state: Optional[str] = "Assam"
-    language: Optional[str] = "en"
+    district: str | None = None
+    state: str | None = "Assam"
+    language: str | None = "en"
+
 
 class UserCreate(UserBase):
     password: str
 
+
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[EmailStr] = None
-    role: Optional[str] = None
-    district: Optional[str] = None
-    state: Optional[str] = None
-    language: Optional[str] = None
-    status: Optional[str] = None
+    name: str | None = None
+    phone: str | None = None
+    email: EmailStr | None = None
+    role: str | None = None
+    district: str | None = None
+    state: str | None = None
+    language: str | None = None
+    status: str | None = None
+
 
 class PreferencesUpdate(BaseModel):
-    language: Optional[str] = None
-    district: Optional[str] = None
-    state: Optional[str] = None
+    language: str | None = None
+    district: str | None = None
+    state: str | None = None
+
 
 class UserResponse(UserBase):
     id: str
