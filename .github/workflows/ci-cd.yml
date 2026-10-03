@@ -74,7 +74,7 @@ jobs:
           python -c "import email_validator; print('email-validator installed successfully')"
 
       # --------------------------------------------------------
-      # Verify important backend imports
+      # Verify backend import
       # --------------------------------------------------------
       - name: Verify Backend Import
         env:
@@ -84,6 +84,30 @@ jobs:
         run: |
           cd backend
           python -c "from app.main import app; print('Backend app import successful')"
+
+      # --------------------------------------------------------
+      # Initialize test database
+      # --------------------------------------------------------
+      - name: Initialize Test Database
+        env:
+          ENVIRONMENT: test
+          SECRET_KEY: test-secret-key-12345
+          DATABASE_URL: sqlite:///./test_ci.db
+        run: |
+          cd backend
+          python -c "from app.seed.seed_data import seed_database; seed_database(); print('Test database initialized successfully')"
+
+      # --------------------------------------------------------
+      # Verify database tables
+      # --------------------------------------------------------
+      - name: Verify Test Database
+        env:
+          ENVIRONMENT: test
+          SECRET_KEY: test-secret-key-12345
+          DATABASE_URL: sqlite:///./test_ci.db
+        run: |
+          cd backend
+          python -c "from app.core.database import engine; from sqlalchemy import inspect; tables = inspect(engine).get_table_names(); print('Database tables:', tables); required = ['users', 'roads', 'road_segments', 'route_requests', 'field_reports']; missing = [table for table in required if table not in tables]; assert not missing, f'Missing tables: {missing}'; print('All required test tables exist')"
 
       # --------------------------------------------------------
       # Ruff linting
@@ -159,7 +183,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # --------------------------------------------------------
-      # Build and push image
+      # Build and push Docker image
       # --------------------------------------------------------
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
